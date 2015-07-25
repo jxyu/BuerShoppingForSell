@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "80AA554F1B6331B300FDA05C"
+               BlueprintIdentifier = "80AA55811B6338ED00FDA05C"
                BuildableName = "BuerShoppingforsell.app"
                BlueprintName = "BuerShoppingforsell"
                ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
@@ -28,7 +28,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "80AA55681B6331B300FDA05C"
+               BlueprintIdentifier = "80AA559A1B6338ED00FDA05C"
                BuildableName = "BuerShoppingforsellTests.xctest"
                BlueprintName = "BuerShoppingforsellTests"
                ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
@@ -46,7 +46,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "80AA55681B6331B300FDA05C"
+               BlueprintIdentifier = "80AA559A1B6338ED00FDA05C"
                BuildableName = "BuerShoppingforsellTests.xctest"
                BlueprintName = "BuerShoppingforsellTests"
                ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
@@ -56,7 +56,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80AA554F1B6331B300FDA05C"
+            BlueprintIdentifier = "80AA55811B6338ED00FDA05C"
             BuildableName = "BuerShoppingforsell.app"
             BlueprintName = "BuerShoppingforsell"
             ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
@@ -76,7 +76,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80AA554F1B6331B300FDA05C"
+            BlueprintIdentifier = "80AA55811B6338ED00FDA05C"
             BuildableName = "BuerShoppingforsell.app"
             BlueprintName = "BuerShoppingforsell"
             ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
@@ -95,7 +95,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80AA554F1B6331B300FDA05C"
+            BlueprintIdentifier = "80AA55811B6338ED00FDA05C"
             BuildableName = "BuerShoppingforsell.app"
             BlueprintName = "BuerShoppingforsell"
             ReferencedContainer = "container:BuerShoppingforsell.xcodeproj">
