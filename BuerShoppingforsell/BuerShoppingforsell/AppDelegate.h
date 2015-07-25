@@ -7,10 +7,21 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CustomTabBarViewController.h"
+#import "FirstScrollController.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
+{
+    CustomTabBarViewController *_tabBarViewCol;
+    FirstScrollController *firstCol;
+}
 
+- (void)showTabBar;
+- (void)hiddenTabBar;
+- (void)selectTableBarIndex:(NSInteger)index;
+-(CustomTabBarViewController *)getTabBar;
 @property (strong, nonatomic) UIWindow *window;
+
 
 
 @end
