@@ -7,7 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BaseNavigationController.h"
 
-@interface AddGoodsViewController : UIViewController
+@interface AddGoodsViewController : BaseNavigationController
+@property (weak, nonatomic) IBOutlet UITableView *myTableview;
 
 @end

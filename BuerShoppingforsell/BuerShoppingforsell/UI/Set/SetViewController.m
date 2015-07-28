@@ -40,10 +40,10 @@
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     CGFloat cellheight=40;
-    if (indexPath.section==3) {
+    if (indexPath.section==4) {
         cellheight=40;
     }
-    if (indexPath.section==4) {
+    if (indexPath.section==5) {
         cellheight=60;
     }
     return cellheight;
@@ -65,7 +65,7 @@
 
 -(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
 {
-    if (section==2) {
+    if (section==3) {
         return 25;
     }
     return 5;
@@ -93,64 +93,41 @@
         case 1:
         {
             UILabel * lbl_shimingrenzheng=[[UILabel alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
-            lbl_shimingrenzheng.text=@"重置密码";
-            [cell addSubview:lbl_shimingrenzheng];
+            
+            lbl_shimingrenzheng.text=@"关于我们";
             UIImageView * img_Go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-17, 15, 7, 12)];
             img_Go.image=[UIImage imageNamed:@"index_go"];
             [cell addSubview:img_Go];
-            UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 38)];
-            [btn_shimingrenzheng addTarget:self action:@selector(JumpToResetPWD) forControlEvents:UIControlEventTouchUpInside];
+            UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 12)];
+            [btn_shimingrenzheng addTarget:self action:@selector(AboutUs) forControlEvents:UIControlEventTouchUpInside];
+            [cell addSubview:lbl_shimingrenzheng];
             [cell addSubview:btn_shimingrenzheng];
         }
             break;
         case 2:
         {
             UILabel * lbl_shimingrenzheng=[[UILabel alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
-            switch (indexPath.row) {
-                case 0:
-                {
-                    lbl_shimingrenzheng.text=@"关于我们";
-                    UIImageView * img_Go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-17, 15, 7, 12)];
-                    img_Go.image=[UIImage imageNamed:@"index_go"];
-                    [cell addSubview:img_Go];
-                    UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 12)];
-                    [btn_shimingrenzheng addTarget:self action:@selector(AboutUs) forControlEvents:UIControlEventTouchUpInside];
-                    [cell addSubview:btn_shimingrenzheng];
-                }
-                    break;
-                case 1:
-                {
-                    lbl_shimingrenzheng.text=@"应用说明";
-                    UIImageView * img_Go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-17, 15, 7, 12)];
-                    img_Go.image=[UIImage imageNamed:@"index_go"];
-                    [cell addSubview:img_Go];
-                }
-                    break;
-                case 2:
-                {
-                    lbl_shimingrenzheng.text=@"版本更新";
-                    UILabel * lbl_banben=[[UILabel alloc] initWithFrame:CGRectMake(cell.frame.size.width-100, 10, 90, 20)];
-                    lbl_banben.text=@"最新版本1.0";
-                    lbl_banben.textColor=[UIColor grayColor];
-                    lbl_banben.font=[UIFont systemFontOfSize:15];
-                    lbl_banben.textAlignment=NSTextAlignmentRight;
-                    [cell addSubview:lbl_banben];
-                }
-                    break;
-                    
-                default:
-                    break;
-            }
-            
-            
-            [cell addSubview:lbl_shimingrenzheng];
-            
-//            UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 38)];
-//            
-//            [cell addSubview:btn_shimingrenzheng];
-        }
+            lbl_shimingrenzheng.text=@"应用说明";
+            UIImageView * img_Go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-17, 15, 7, 12)];
+            img_Go.image=[UIImage imageNamed:@"index_go"];
+            [cell addSubview:img_Go];
+            [cell addSubview:lbl_shimingrenzheng];        }
             break;
         case 3:
+        {
+            UILabel * lbl_shimingrenzheng=[[UILabel alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
+            
+            lbl_shimingrenzheng.text=@"版本更新";
+            UILabel * lbl_banben=[[UILabel alloc] initWithFrame:CGRectMake(cell.frame.size.width-100, 10, 90, 20)];
+            lbl_banben.text=@"最新版本1.0";
+            lbl_banben.textColor=[UIColor grayColor];
+            lbl_banben.font=[UIFont systemFontOfSize:15];
+            lbl_banben.textAlignment=NSTextAlignmentRight;
+            [cell addSubview:lbl_banben];
+            
+            [cell addSubview:lbl_shimingrenzheng];        }
+            break;
+        case 4:
         {
             UIView * BackView_exit=[[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 40)];
             BackView_exit.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
@@ -165,7 +142,7 @@
             [cell addSubview:BackView_exit];
         }
             break;
-        case 4:
+        case 5:
         {
             UIView * BackView_exit=[[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 60)];
             BackView_exit.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
@@ -193,18 +170,11 @@
 }
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if (section!=2) {
-        return 1;
-    }
-    else
-    {
-        return 4;
-    }
-    
+    return 1;
 }
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 5;
+    return 6;
 }
 
 /**

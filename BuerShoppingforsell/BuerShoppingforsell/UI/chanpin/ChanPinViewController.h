@@ -7,7 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "BaseNavigationController.h"
 
-@interface ChanPinViewController : UIViewController
+@interface ChanPinViewController : BaseNavigationController
+@property (weak, nonatomic) IBOutlet UITableView *myTableview;
 
 @end

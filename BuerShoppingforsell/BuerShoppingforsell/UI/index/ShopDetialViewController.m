@@ -14,8 +14,6 @@
 //#import "CWStarRateView.h"
 #import "MJRefresh.h"
 //#import "RoutePlanViewController.h"
-//#import "UMSocial.h"
-//#import "UMSocialSnsService.h"
 
 #define umeng_app_key @"557e958167e58e0b720041ff"
 
@@ -162,7 +160,7 @@
 //    if (userinfoWithFile[@"key"]) {
         DataProvider * dataprovider=[[DataProvider alloc] init];
         [dataprovider setDelegateObject:self setBackFunctionName:@"GetStoreDetialBackCall:"];
-        [dataprovider GetIndexDataWithKey:@"4aa9e32945482adfa2906887098ca23c"];
+        [dataprovider GetIndexDataWithKey:@"7b9819c329176854a80164afebd178fc"];
 //    }
 //    else
 //    {

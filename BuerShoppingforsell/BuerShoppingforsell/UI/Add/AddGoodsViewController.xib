@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6211" systemVersion="14A298i" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7706" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6204"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="AddGoodsViewController">
             <connections>
+                <outlet property="myTableview" destination="lfs-20-DEA" id="naJ-d5-FdW"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
@@ -13,7 +14,41 @@
         <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
             <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="lfs-20-DEA">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                </tableView>
+            </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="lfs-20-DEA" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="NIe-x5-Rv5"/>
+                <constraint firstAttribute="bottom" secondItem="lfs-20-DEA" secondAttribute="bottom" constant="50" id="O1n-WX-MjO"/>
+                <constraint firstItem="lfs-20-DEA" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="64" id="V2D-s2-gIt"/>
+                <constraint firstAttribute="trailing" secondItem="lfs-20-DEA" secondAttribute="trailing" id="d7s-Rc-Xdw"/>
+            </constraints>
+            <variation key="default">
+                <mask key="subviews">
+                    <exclude reference="lfs-20-DEA"/>
+                </mask>
+                <mask key="constraints">
+                    <exclude reference="NIe-x5-Rv5"/>
+                    <exclude reference="O1n-WX-MjO"/>
+                    <exclude reference="V2D-s2-gIt"/>
+                    <exclude reference="d7s-Rc-Xdw"/>
+                </mask>
+            </variation>
+            <variation key="heightClass=regular-widthClass=compact">
+                <mask key="subviews">
+                    <include reference="lfs-20-DEA"/>
+                </mask>
+                <mask key="constraints">
+                    <include reference="NIe-x5-Rv5"/>
+                    <include reference="O1n-WX-MjO"/>
+                    <include reference="V2D-s2-gIt"/>
+                    <include reference="d7s-Rc-Xdw"/>
+                </mask>
+            </variation>
         </view>
     </objects>
 </document>
