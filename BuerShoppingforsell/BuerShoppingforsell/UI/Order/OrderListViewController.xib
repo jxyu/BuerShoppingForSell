@@ -23,7 +23,7 @@
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
             <constraints>
                 <constraint firstAttribute="bottom" secondItem="eZ7-9k-GDy" secondAttribute="bottom" id="6CN-Iv-Xbz">
-                    <variation key="heightClass=regular-widthClass=compact" constant="-40"/>
+                    <variation key="heightClass=regular-widthClass=compact" constant="5"/>
                 </constraint>
                 <constraint firstItem="eZ7-9k-GDy" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="TKa-Zs-Ln4"/>
                 <constraint firstItem="eZ7-9k-GDy" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="120" id="WJV-TC-xS4"/>

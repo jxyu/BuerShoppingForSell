@@ -231,56 +231,56 @@ typedef NS_ENUM(NSUInteger, TableColumnSortType) {
     [target selectRowAtIndexPath:indexPath animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
-- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
-    
-    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, [tableView rectForHeaderInSection:section].size.height)];;
-    if (tableView == leftHeaderTableView) {
-        UITapGestureRecognizer *leftRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(leftHeaderTap:)];
-        view.backgroundColor = [UIColor yellowColor];
-        view.tag = section;
-        [view addGestureRecognizer:leftRecognizer];
-    }else {
-        NSUInteger count = [datasource arrayDataForTopHeaderInTableView:self].count;
-        for (int i = 0; i < count; i++) {
-            CGFloat cellW = [self accessContentTableViewCellWidth:i];
-            CGFloat cellH = [tableView rectForHeaderInSection:section].size.height;
-            
-            CGFloat width = [[columnPointCollection objectAtIndex:i] floatValue];
-            
-            UIView *subView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cellW, cellH)];
-            subView.center = CGPointMake(width, cellH / 2.0f);
-            subView.clipsToBounds = YES;
-            if (i == 1) {
-                subView.backgroundColor = [UIColor grayColor];
-            }else {
-                subView.backgroundColor = [UIColor blackColor];
-            }
-            
-            NSString *tagStr = [NSString stringWithFormat:@"%d_%d", section, i];
-            subView.tag = (int)tagStr;
-            
-            NSString *columnStr = [NSString stringWithFormat:@"%d_%d", section, i];
-            [columnTapViewDict setObject:subView forKey:columnStr];
-            
-            
-            if ([columnSortedTapFlags objectForKey:columnStr] == nil) {
-                [columnSortedTapFlags setObject:[NSNumber numberWithInt:TableColumnSortTypeNone] forKey:columnStr];
-            }
-            
-            
-            UITapGestureRecognizer *contentHeaderGecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(contentHeaderTap:)];
-            
-            [subView addGestureRecognizer:contentHeaderGecognizer];
-            
-            [view addSubview:subView];
-        }
-    }
-    return view;
-}
+//- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+//    
+//    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.bounds.size.width, [tableView rectForHeaderInSection:section].size.height)];;
+//    if (tableView == leftHeaderTableView) {
+//        UITapGestureRecognizer *leftRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(leftHeaderTap:)];
+//        view.backgroundColor = [UIColor yellowColor];
+//        view.tag = section;
+//        [view addGestureRecognizer:leftRecognizer];
+//    }else {
+//        NSUInteger count = [datasource arrayDataForTopHeaderInTableView:self].count;
+//        for (int i = 0; i < count; i++) {
+//            CGFloat cellW = [self accessContentTableViewCellWidth:i];
+//            CGFloat cellH = [tableView rectForHeaderInSection:section].size.height;
+//            
+//            CGFloat width = [[columnPointCollection objectAtIndex:i] floatValue];
+//            
+//            UIView *subView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, cellW, cellH)];
+//            subView.center = CGPointMake(width, cellH / 2.0f);
+//            subView.clipsToBounds = YES;
+//            if (i == 1) {
+//                subView.backgroundColor = [UIColor grayColor];
+//            }else {
+//                subView.backgroundColor = [UIColor blackColor];
+//            }
+//            
+//            NSString *tagStr = [NSString stringWithFormat:@"%d_%d", section, i];
+//            subView.tag = (int)tagStr;
+//            
+//            NSString *columnStr = [NSString stringWithFormat:@"%d_%d", section, i];
+//            [columnTapViewDict setObject:subView forKey:columnStr];
+//            
+//            
+//            if ([columnSortedTapFlags objectForKey:columnStr] == nil) {
+//                [columnSortedTapFlags setObject:[NSNumber numberWithInt:TableColumnSortTypeNone] forKey:columnStr];
+//            }
+//            
+//            
+//            UITapGestureRecognizer *contentHeaderGecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(contentHeaderTap:)];
+//            
+//            [subView addGestureRecognizer:contentHeaderGecognizer];
+//            
+//            [view addSubview:subView];
+//        }
+//    }
+//    return view;
+//}
 
-- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 20.0f;
-}
+//- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+//    return 20.0f;
+//}
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -513,9 +513,11 @@ typedef NS_ENUM(NSUInteger, TableColumnSortType) {
             
             [txt_item sizeToFit];
             txt_item.center = CGPointMake(cellW / 2.0f, cellH / 2.0f);
+            txt_item.tag=indexPath.row*10+i;
+            txt_item.keyboardType=UIKeyboardTypeNumbersAndPunctuation;
             txt_item.delegate=datasource;
             UIColor *color = [self bgColorInSection:indexPath.section InRow:indexPath.row InColumn:i];
-            txt_item.bounds=CGRectMake(0, 0, 50, 20);
+            txt_item.bounds=CGRectMake(0, 0, 70, 20);
             view.backgroundColor = color;
             txt_item.backgroundColor = color;
             
@@ -608,12 +610,12 @@ typedef NS_ENUM(NSUInteger, TableColumnSortType) {
             NSString *str = [NSString stringWithFormat:@"%d_%d", iPath.section, iPath.row];
             [columnSortedTapFlags setObject:[NSNumber numberWithInt:columnFlag] forKey:str];
             
-            [self singleHeaderClick:iPath];
+//            [self singleHeaderClick:iPath];
         }
         [columnSortedTapFlags setObject:[NSNumber numberWithInt:newType] forKey:columnStr];
         
     }else {
-        [self singleHeaderClick:indexPath];
+//        [self singleHeaderClick:indexPath];
     }
     
     

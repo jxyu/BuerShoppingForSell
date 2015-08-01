@@ -13,6 +13,8 @@
 #import "SDCycleScrollView.h"
 //#import "CWStarRateView.h"
 #import "MJRefresh.h"
+#import "LoginViewController.h"
+#import "ShopEditDetialViewController.h"
 //#import "RoutePlanViewController.h"
 
 #define umeng_app_key @"557e958167e58e0b720041ff"
@@ -33,18 +35,37 @@
     [super viewDidLoad];
     _lblTitle.text=@"首页";
     _lblTitle.textColor=[UIColor whiteColor];
+    [self addRightbuttontitle:@"编辑"];
     arrayslider=[[NSArray alloc] init];
     OrderInfo=[[NSDictionary alloc] init];
-    //[self LoadAllData];
-    [self InitAllView];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(LoginBackCall) name:@"Login_success" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(SaveBackCall) name:@"index_save_seccess" object:nil];
+    [self LoadAllData];
+    //[self InitAllView];
 }
 
+-(void)SaveBackCall
+{
+    [_myTableVeiw.header endRefreshing];
+}
+-(void)LoginBackCall
+{
+    [self LoadAllData];
+}
 -(void)LoadAllData
 {
     NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                                               NSUserDomainMask, YES) objectAtIndex:0];
     NSString *plistPath = [rootPath stringByAppendingPathComponent:@"UserInfo.plist"];
     userinfoWithFile =[[NSDictionary alloc] initWithContentsOfFile:plistPath];
+    if (userinfoWithFile[@"key"]) {
+        [self InitAllView];
+    }
+    else
+    {
+        LoginViewController * login=[[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:[NSBundle mainBundle]];
+        [self.navigationController pushViewController:login animated:YES];
+    }
     
 }
 
@@ -69,9 +90,9 @@
     jianju.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
     [myheaderView addSubview:jianju];
     NSMutableArray *images = [[NSMutableArray alloc] init];
-    for (int i=0; i<arrayslider.count; i++) {
+    for (int i=0; i<(arrayslider.count>0?arrayslider.count:1); i++) {
         UIImageView * img=[[UIImageView alloc] init];
-        [img sd_setImageWithURL:[NSURL URLWithString:arrayslider[i]] placeholderImage:[UIImage imageNamed:@"placeholder.png"] ];
+        [img sd_setImageWithURL:[NSURL URLWithString:i<arrayslider.count?arrayslider[i]:@""] placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
         [images addObject:img];
     }
     // 创建带标题的图片轮播器
@@ -160,7 +181,7 @@
 //    if (userinfoWithFile[@"key"]) {
         DataProvider * dataprovider=[[DataProvider alloc] init];
         [dataprovider setDelegateObject:self setBackFunctionName:@"GetStoreDetialBackCall:"];
-        [dataprovider GetIndexDataWithKey:@"7b9819c329176854a80164afebd178fc"];
+        [dataprovider GetIndexDataWithKey:userinfoWithFile[@"key"]];
 //    }
 //    else
 //    {
@@ -273,6 +294,14 @@
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     return 1;
+}
+
+-(void)clickRightButton:(UIButton *)sender
+{
+    ShopEditDetialViewController * shopedit=[[ShopEditDetialViewController alloc] initWithNibName:@"ShopEditDetialViewController" bundle:[NSBundle mainBundle]];
+    shopedit.StoreInfo=storeInfo;
+    shopedit.key=userinfoWithFile[@"key"];
+    [self.navigationController pushViewController:shopedit animated:YES];
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

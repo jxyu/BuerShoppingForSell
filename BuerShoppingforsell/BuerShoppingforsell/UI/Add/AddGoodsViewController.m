@@ -10,18 +10,48 @@
 #import "ZLPhoto.h"
 #import "AppDelegate.h"
 #import "XCMultiSortTableView.h"
+#import "ClassifyViewController.h"
+#import "DataProvider.h"
+#import "MLTableAlert.h"
+//#import "LMContainsLMComboxScrollView.h"
+//#import "LMComBoxView.h"
 
 @interface AddGoodsViewController ()<ZLPhotoPickerViewControllerDelegate,ZLPhotoPickerBrowserViewControllerDataSource,ZLPhotoPickerBrowserViewControllerDelegate,UITableViewDelegate,UITableViewDataSource,XCMultiTableViewDataSource,UITextFieldDelegate>
 @property (nonatomic , strong) NSMutableArray *assets;
 @property (weak,nonatomic) UIScrollView *scrollView;
+@property (strong, nonatomic) MLTableAlert *alert;
 @end
 
 @implementation AddGoodsViewController
 {
+    NSString * GoodName;
+    NSString * GoodDetial;
+    NSString * classifyTitle;
+    NSString * classifyOne;
+    NSString * classifyTwo;
     UIView * backView_bottom;
     NSMutableArray *headData;
     NSMutableArray *leftTableData;
     NSMutableArray *rightTableData;
+    
+    NSMutableArray *priceMutableArray;
+    NSMutableArray *kucunMutableArray;
+    NSMutableArray *specpriceMutableArray;
+    
+    
+    NSDictionary * userinfoWithFile;
+    XCMultiTableView *biaogetableView;
+    
+    NSArray * spec_list;
+    
+    NSString * guige1;
+    NSString * guige2;
+    NSString * guigetext1;
+    NSString * guigetext2;
+    NSArray * priceArray;
+    NSArray * kuncunArray;
+    NSArray * specPriceArray;
+    
 }
 - (NSMutableArray *)assets{
     if (!_assets) {
@@ -29,74 +59,108 @@
     }
     return _assets;
 }
+
+-(void)LoadAllData
+{
+    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                              NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *plistPath = [rootPath stringByAppendingPathComponent:@"UserInfo.plist"];
+    userinfoWithFile =[[NSDictionary alloc] initWithContentsOfFile:plistPath];
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"RequestDataBackCall:"];
+    [dataprovider GetGoodDetialWithkey:userinfoWithFile[@"key"] andcommonid:_commonid];
+    
+}
+-(void)RequestDataBackCall:(id)dict
+{
+    NSLog(@"商品详情:%@",dict);
+    if (!dict[@"datas"][@"error"]) {
+        GoodName=dict[@"datas"][@"common_info"][@"goods_name"];
+        GoodDetial=dict[@"datas"][@"common_info"][@"goods_jingle"];
+        [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+    }
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
     _lblTitle.text=@"商品详情编辑";
     _lblTitle.textColor=[UIColor whiteColor];
     [self addLeftbuttontitle:@"取消"];
     [self addRightbuttontitle:@"保存"];
+    [self LoadAllData];
     [self initData];
     _myTableview.delegate=self;
     _myTableview.dataSource=self;
     _myTableview.tag=1;
+    spec_list=[[NSArray alloc] init];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(RefreshTable:) name:@"select_classify_finish" object:nil];
     [self buildheaderview];
 }
 
 - (void)initData {
     headData = [NSMutableArray arrayWithCapacity:10];
-    [headData addObject:@"规格1"];
-    [headData addObject:@"规格2"];
+    [headData addObject:guige1?guige1:@"规格1"];
+    [headData addObject:guige2?guige2:@"规格2"];
     [headData addObject:@"价格"];
     [headData addObject:@"库存"];
     [headData addObject:@"天天特价价格(选填)"];
+    NSArray *array1=[[NSArray alloc] init];
+    NSArray *array2=[[NSArray alloc] init];
+    int rowsNumber=1;
+    if (guigetext1.length>0) {
+        NSRange range=[guigetext1 rangeOfString:@","];
+        if (range.length>0) {
+            array1= [guigetext1 componentsSeparatedByString:@","];
+        }
+        else
+        {
+            array1= [guigetext1 componentsSeparatedByString:@"，"];
+        }
+        
+        if (guigetext2.length>0) {
+            NSRange range1=[guigetext1 rangeOfString:@","];
+            if (range1.length>0) {
+                array2= [guigetext2 componentsSeparatedByString:@","];
+            }
+            else
+            {
+                array2= [guigetext2 componentsSeparatedByString:@"，"];
+            }
+            rowsNumber=(int)array1.count*(int)array2.count;
+        }
+        else
+        {
+            rowsNumber=(int)array1.count;
+        }
+    }
+    
+    
+    priceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+    kucunMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+    specpriceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
     leftTableData = [NSMutableArray arrayWithCapacity:10];
     NSMutableArray *one = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < rowsNumber; i++) {
         [one addObject:[NSString stringWithFormat:@"ki-%d", i]];
     }
     [leftTableData addObject:one];
-    NSMutableArray *two = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 3; i < 10; i++) {
-        [two addObject:[NSString stringWithFormat:@"ki-%d", i]];
-    }
-    [leftTableData addObject:two];
-    
-    
     
     rightTableData = [NSMutableArray arrayWithCapacity:10];
-    
     NSMutableArray *oneR = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < rowsNumber; i++) {
         NSMutableArray *ary = [NSMutableArray arrayWithCapacity:10];
         for (int j = 0; j < 5; j++) {
-            if (j == 1) {
-                [ary addObject:[NSNumber numberWithInt:random() % 5]];
-            }else if (j == 2) {
-                [ary addObject:[NSNumber numberWithInt:random() % 10]];
+            if (j == 0) {
+                [ary addObject:[NSString stringWithFormat:@"%@",array1.count>0?array1[i/(array1.count)]:@"示例"]];
+            }else if (j == 1) {
+                [ary addObject:[NSString stringWithFormat:@"%@",array2.count>0?array2[i%(array2.count)]:@"示例"]];
             }
             else {
-                [ary addObject:[NSString stringWithFormat:@"column %d %d", i, j]];
+                [ary addObject:[NSNumber numberWithInt:0]];
             }
         }
         [oneR addObject:ary];
     }
     [rightTableData addObject:oneR];
-    
-    NSMutableArray *twoR = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 3; i < 10; i++) {
-        NSMutableArray *ary = [NSMutableArray arrayWithCapacity:10];
-        for (int j = 0; j < 5; j++) {
-            if (j == 1) {
-                [ary addObject:[NSNumber numberWithInt:random() % 5]];
-            }else if (j == 2) {
-                [ary addObject:[NSNumber numberWithInt:random() % 5]];
-            }else {
-                [ary addObject:[NSString stringWithFormat:@"column %d %d", i, j]];
-            }
-        }
-        [twoR addObject:ary];
-    }
-    [rightTableData addObject:twoR];
 }
 -(void)buildheaderview
 {
@@ -124,6 +188,11 @@
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    if (indexPath.section==1) {
+        ClassifyViewController * classify=[[ClassifyViewController alloc] initWithNibName:@"ClassifyViewController" bundle:[NSBundle mainBundle]];
+        classify.key=userinfoWithFile[@"key"];
+        [self.navigationController pushViewController:classify animated:YES];
+    }
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -138,7 +207,7 @@
             height=110;
         }
     }
-    if (indexPath.section==3) {
+    if (indexPath.section==4) {
         height=400;
     }
     return height;
@@ -154,7 +223,14 @@
             CGFloat x=lbl_title.frame.size.width+lbl_title.frame.origin.x+10;
             UITextField * txt_name=[[UITextField alloc] initWithFrame:CGRectMake(x, 10, cell.frame.size.width-x-10, 30)];
             txt_name.textAlignment=NSTextAlignmentRight;
-            txt_name.placeholder=@"请输入产品名称";
+            txt_name.tag=1000;
+            if (GoodName) {
+                txt_name.text=GoodName;
+            }
+            else
+            {
+                txt_name.placeholder=@"请输入产品名称";
+            }
             [cell addSubview:txt_name];
         }else
         {
@@ -165,12 +241,15 @@
             UITextView * txtview_detial=[[UITextView alloc] initWithFrame:CGRectMake(x, 15, SCREEN_WIDTH-x-10, 80)];
             txtview_detial.scrollEnabled=YES;
             txtview_detial.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
+            if (GoodDetial) {
+                txtview_detial.text=GoodDetial;
+            }
             [cell addSubview:txtview_detial];
         }
     }
     if (indexPath.section==1) {
         UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10,15, 200, 20)];
-        lbl_title.text=@"一级分类/二级分类";
+        lbl_title.text=classifyTitle?classifyTitle:@"一级分类/二级分类";
         [cell addSubview:lbl_title];
         UIImageView * img_go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-20, 17.5, 8, 15)];
         img_go.image=[UIImage imageNamed:@"index_go"];
@@ -178,32 +257,64 @@
     }
     if (indexPath.section==2) {
         if (indexPath.row==0) {
-            UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10,15, 60, 20)];
-            lbl_title.text=@"规格1";
-            [cell addSubview:lbl_title];
-            CGFloat x=lbl_title.frame.size.width+lbl_title.frame.origin.x+10;
+            UIButton * btn_guige1=[[UIButton alloc] initWithFrame:CGRectMake(10,10, 60, 30)];
+            [btn_guige1 setTitle:@"规格1" forState:UIControlStateNormal];
+            [btn_guige1 addTarget:self action:@selector(btn_selectGuige:) forControlEvents:UIControlEventTouchUpInside];
+            [btn_guige1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            btn_guige1.tag=1;
+            [cell addSubview:btn_guige1];
+            CGFloat x=btn_guige1.frame.size.width+btn_guige1.frame.origin.x+10;
             UITextField * txt_name=[[UITextField alloc] initWithFrame:CGRectMake(x, 10, cell.frame.size.width-x-10, 30)];
 //            txt_name.textAlignment=NSTextAlignmentRight;
-            txt_name.placeholder=@"格式如下：红色，粉色，绿色";
+            if (guigetext1) {
+                txt_name.text=guigetext1;
+            }
+            else
+            {
+                txt_name.placeholder=@"格式如下：红色，粉色，绿色，";
+            }
+            txt_name.tag=1001;
+            txt_name.delegate=self;
             [cell addSubview:txt_name];
         }else
         {
-            UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10,15, 60, 20)];
-            lbl_title.text=@"规格2";
-            [cell addSubview:lbl_title];
-            CGFloat x=lbl_title.frame.size.width+lbl_title.frame.origin.x+10;
+            UIButton * btn_guige1=[[UIButton alloc] initWithFrame:CGRectMake(10,10, 60, 30)];
+            [btn_guige1 setTitle:@"规格2" forState:UIControlStateNormal];
+            [btn_guige1 addTarget:self action:@selector(btn_selectGuige:) forControlEvents:UIControlEventTouchUpInside];
+            [btn_guige1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            btn_guige1.tag=2;
+            [cell addSubview:btn_guige1];
+            CGFloat x=btn_guige1.frame.size.width+btn_guige1.frame.origin.x+10;
             UITextField * txt_name=[[UITextField alloc] initWithFrame:CGRectMake(x, 10, cell.frame.size.width-x-10, 30)];
 //            txt_name.textAlignment=NSTextAlignmentRight;
-            txt_name.placeholder=@"格式如下：XL，2XL，M";
+            if (guigetext2) {
+                txt_name.text=guigetext2;
+            }
+            else
+            {
+                txt_name.placeholder=@"格式如下：XL，2XL，M，";
+            }
+            txt_name.delegate=self;
+            txt_name.tag=1002;
             [cell addSubview:txt_name];
         }
     }
     if (indexPath.section==3) {
-        XCMultiTableView *tableView = [[XCMultiTableView alloc] initWithFrame:CGRectInset(cell.bounds, 5.0f, 5.0f)];
-        tableView.leftHeaderEnable = NO;
-        tableView.datasource = self;
-        tableView.tag=2;
-        [cell addSubview:tableView];
+        UIButton * btn_BuildExcel=[[UIButton alloc] initWithFrame:CGRectMake(10, 5, cell.frame.size.width-20, 40)];
+        [btn_BuildExcel setTitle:@"生成表格" forState:UIControlStateNormal];
+        [btn_BuildExcel setTitleColor:[UIColor colorWithRed:155/255.0 green:73/255.0 blue:139/255.0 alpha:1.0] forState:UIControlStateNormal];
+        btn_BuildExcel.layer.cornerRadius=5;
+        btn_BuildExcel.layer.borderWidth=1;
+        btn_BuildExcel.layer.borderColor=[[UIColor colorWithRed:155/255.0 green:73/255.0 blue:139/255.0 alpha:1.0] CGColor];
+        [btn_BuildExcel addTarget:self action:@selector(btn_buildExcelClick:) forControlEvents:UIControlEventTouchUpInside];
+        [cell addSubview:btn_BuildExcel];
+    }
+    if (indexPath.section==4) {
+        biaogetableView = [[XCMultiTableView alloc] initWithFrame:CGRectInset(cell.bounds, 5.0f, 5.0f)];
+        biaogetableView.leftHeaderEnable = NO;
+        biaogetableView.datasource = self;
+        biaogetableView.tag=2;
+        [cell addSubview:biaogetableView];
     }
     return cell;
 }
@@ -220,11 +331,11 @@
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     if (tableView.tag==1) {
-        return 4;
+        return 5;
     }
     else
     {
-        return 1;
+        return leftTableData.count;
     }
 }
 
@@ -360,26 +471,166 @@
 }
 
 - (UIColor *)tableView:(XCMultiTableView *)tableView bgColorInSection:(NSUInteger)section InRow:(NSUInteger)row InColumn:(NSUInteger)column {
-    if (row == 1 && section == 0) {
-        return [UIColor redColor];
-    }
+//    if (row == 1 && section == 0) {
+//        return [UIColor redColor];
+//    }
     return [UIColor clearColor];
 }
 
 - (UIColor *)tableView:(XCMultiTableView *)tableView headerBgColorInColumn:(NSUInteger)column {
-    if (column == -1) {
-        return [UIColor redColor];
-    }else if (column == 1) {
-        return [UIColor grayColor];
-    }
+//    if (column == -1) {
+//        return [UIColor redColor];
+//    }else if (column == 1) {
+//        return [UIColor grayColor];
+//    }
     return [UIColor clearColor];
+}
+
+
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    if (textField.tag<1000) {
+        int chu=(int)textField.tag/10;
+        
+        int yu=(int)textField.tag%10;
+        switch (yu) {
+            case 2:
+                [priceMutableArray setObject:textField.text atIndexedSubscript:chu];
+                break;
+            case 3:
+                [kucunMutableArray setObject:textField.text atIndexedSubscript:chu];
+                break;
+            case 4:
+                [specpriceMutableArray setObject:textField.text atIndexedSubscript:chu];
+                break;
+            default:
+                break;
+        }
+    }
+}
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+    if (textField.tag>=1000) {
+        if (textField.tag==1001) {
+            guigetext1=textField.text;
+            return YES;
+        }
+        if (textField.tag==1002) {
+            guigetext2=textField.text;
+            return YES;
+        }
+        if (textField.tag==1000) {
+            GoodName=textField.text;
+            return YES;
+        }
+    }
+    
+    NSLog(@"%@",string);
+    return YES;
 }
 - (BOOL)textFieldShouldReturn:(UITextField *)textField
 {
+    NSLog(@"表格tag%ld",(long)textField.tag);
     [textField resignFirstResponder];
     return YES;
 }
+- (void)RefreshTable:(NSNotification *)notification {
+    NSArray *array = notification.object;
+    classifyTitle=[NSString stringWithFormat:@"%@/%@",array[0][@"gc_name"],array[1][@"gc_name"]];
+    classifyOne=array[0][@"gc_id"];
+    classifyTwo=array[1][@"gc_id"];
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"GetGuigeBackCall:"];
+    [dataprovider GetGuiGeData:userinfoWithFile[@"key"] andgc_id:array[1][@"gc_id"]];
+}
+-(void)GetGuigeBackCall:(id)dict
+{
+    NSLog(@"获取规格%@",dict);
+    if (!dict[@"datas"][@"error"]) {
+        spec_list=[[NSArray alloc] initWithArray:dict[@"datas"][@"spec_list"]];
+        [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:1] withRowAnimation:UITableViewRowAnimationFade];
+    }
+}
 
+/**
+ *  规格选择
+ *
+ *  @param sender <#sender description#>
+ */
+-(void)btn_selectGuige:(UIButton *)sender
+{
+    if (spec_list.count>0) {
+        // create the alert
+        self.alert = [MLTableAlert tableAlertWithTitle:@"选择规格" cancelButtonTitle:@"取消" numberOfRows:^NSInteger (NSInteger section)
+                      {
+                          return spec_list.count;
+                      }
+                                              andCells:^UITableViewCell* (MLTableAlert *anAlert, NSIndexPath *indexPath)
+                      {
+                          static NSString *CellIdentifier = @"CellIdentifier";
+                          UITableViewCell *cell = [anAlert.table dequeueReusableCellWithIdentifier:CellIdentifier];
+                          if (cell == nil)
+                              cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
+                          
+                          cell.textLabel.text = [NSString stringWithFormat:@"%@", spec_list[indexPath.row][@"sp_name"]];
+                          
+                          return cell;
+                      }];
+        
+        // Setting custom alert height
+        self.alert.height = 350;
+        
+        // configure actions to perform
+        [self.alert configureSelectionBlock:^(NSIndexPath *selectedIndex){
+            if (sender.tag==1) {
+                guige1=spec_list[selectedIndex.row][@"sp_id"];
+                
+            }
+            else
+            {
+                guige2=spec_list[selectedIndex.row][@"sp_id"];
+            }
+            [sender setTitle:[NSString stringWithFormat:@"%@",spec_list[selectedIndex.row][@"sp_name"]] forState:UIControlStateNormal];
+        } andCompletionBlock:^{
+            //        [sender setTitle:@"规格" forState:UIControlStateNormal];
+        }];
+        
+        // show the alert
+        [self.alert show];
+    }
+    else
+    {
+        UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:@"请先选择分类" delegate:nil cancelButtonTitle:@"知道了" otherButtonTitles: nil];
+        [alert show];
+    }
+    
+    
+}
+
+-(void)btn_buildExcelClick:(UIButton *)sender
+{
+    if (guige1) {
+        DataProvider * dataprovider=[[DataProvider alloc] init];
+        [dataprovider setDelegateObject:self setBackFunctionName:@"GetGuigeWalueBackCall:"];
+        [dataprovider GetGuigeValueWtihkey:userinfoWithFile[@"key"] andname:guigetext1 andgc_id:classifyTwo andsp_id:guige1];
+    }
+    else
+    {
+        UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:@"请选择规格" delegate:nil cancelButtonTitle:@"好的" otherButtonTitles: nil];
+        [alert show];
+    }
+//    [self initData];
+//    [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:4] withRowAnimation:UITableViewRowAnimationFade];
+}
+-(void)GetGuigeWalueBackCall:(id)dict
+{
+    NSLog(@"dict,%@",dict);
+}
+-(void)GetAllPageData
+{
+    
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

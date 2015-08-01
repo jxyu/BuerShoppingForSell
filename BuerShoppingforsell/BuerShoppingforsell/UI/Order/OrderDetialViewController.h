@@ -14,6 +14,7 @@
 @property (weak, nonatomic) IBOutlet UIView *bottomVeiw;
 @property (nonatomic ,strong) NSString * orderid;
 @property (nonatomic,strong) NSString * key;
+@property (nonatomic,strong) NSString * orderStatus;
 
 
 @end

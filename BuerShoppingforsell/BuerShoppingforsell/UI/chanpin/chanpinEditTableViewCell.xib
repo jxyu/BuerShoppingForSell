@@ -94,6 +94,15 @@
                     <constraint firstItem="1f7-VB-F0c" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="7" id="y1J-qs-LLc"/>
                 </constraints>
             </tableViewCellContentView>
+            <connections>
+                <outlet property="btn_select" destination="EqS-e1-4VL" id="Raj-Qe-YKY"/>
+                <outlet property="img_logo" destination="1f7-VB-F0c" id="RMt-uC-3kI"/>
+                <outlet property="lbl_detial" destination="RJT-We-vYK" id="G2u-dB-Ppy"/>
+                <outlet property="lbl_kucun" destination="vHb-uJ-I6k" id="HBc-Lx-2ua"/>
+                <outlet property="lbl_price" destination="gvh-7U-t1h" id="cW7-7V-5v2"/>
+                <outlet property="lbl_title" destination="Nch-7U-FH8" id="qHl-0g-bEp"/>
+                <outlet property="lbl_xiaoliang" destination="OS8-dU-s6d" id="knb-td-P5T"/>
+            </connections>
             <point key="canvasLocation" x="205" y="299"/>
         </tableViewCell>
     </objects>

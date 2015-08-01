@@ -8,7 +8,8 @@
 
 #import "SetViewController.h"
 #import "AppDelegate.h"
-//#import "RealNameViewController.h"
+#import "RealNameViewController.h"
+#import "DataProvider.h"
 //#import "RegisterViewController.h"
 
 @interface SetViewController ()
@@ -16,6 +17,9 @@
 @end
 
 @implementation SetViewController
+{
+    NSDictionary * userinfoWithFile;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -29,6 +33,10 @@
 
 -(void)initAllView
 {
+    NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
+                                                              NSUserDomainMask, YES) objectAtIndex:0];
+    NSString *plistPath = [rootPath stringByAppendingPathComponent:@"UserInfo.plist"];
+    userinfoWithFile =[[NSDictionary alloc] initWithContentsOfFile:plistPath];
     UIView*view1 =[ [UIView alloc]init];
     view1.backgroundColor= [UIColor clearColor];
     [_my_tableView setTableHeaderView:view1];
@@ -98,7 +106,7 @@
             UIImageView * img_Go=[[UIImageView alloc] initWithFrame:CGRectMake(cell.frame.size.width-17, 15, 7, 12)];
             img_Go.image=[UIImage imageNamed:@"index_go"];
             [cell addSubview:img_Go];
-            UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, 12)];
+            UIButton * btn_shimingrenzheng=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, cell.frame.size.width, cell.frame.size.height)];
             [btn_shimingrenzheng addTarget:self action:@selector(AboutUs) forControlEvents:UIControlEventTouchUpInside];
             [cell addSubview:lbl_shimingrenzheng];
             [cell addSubview:btn_shimingrenzheng];
@@ -184,8 +192,8 @@
  */
 -(void)JumpToRealNameVC:(UIButton *)sender
 {
-//    RealNameViewController * relname=[[RealNameViewController alloc] initWithNibName:@"RealNameViewController" bundle:[NSBundle mainBundle]];
-//    [self.navigationController pushViewController:relname animated:YES];
+    RealNameViewController * relname=[[RealNameViewController alloc] initWithNibName:@"RealNameViewController" bundle:[NSBundle mainBundle]];
+    [self.navigationController pushViewController:relname animated:YES];
 }
 -(void)JumpToResetPWD
 {
@@ -221,6 +229,9 @@
         if (result) {
             [[NSNotificationCenter defaultCenter] postNotificationName:@"Exit_success" object:nil];
             [self.navigationController popToRootViewControllerAnimated:YES];
+            DataProvider * dataprovider=[[DataProvider alloc] init];
+            [dataprovider setDelegateObject:self setBackFunctionName:@"exitBackCall:"];
+            [dataprovider EixtLogin:userinfoWithFile[@"key"] andmobile:userinfoWithFile[@"mobile"]];
         }
     }
     @catch (NSException *exception) {
@@ -228,6 +239,13 @@
     }
     @finally {
         
+    }
+}
+-(void)exitBackCall:(id)dict
+{
+    if ([[NSString stringWithFormat:@"%@",dict[@"datas"]] isEqualToString:@"1"]) {
+        UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:@"退出成功" delegate:nil cancelButtonTitle:@"好的" otherButtonTitles: nil];
+        [alert show];
     }
 }
 

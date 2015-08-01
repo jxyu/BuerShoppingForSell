@@ -11,6 +11,5 @@
 
 @interface OrderListViewController : BaseNavigationController<UITableViewDataSource,UITableViewDelegate,UIActionSheetDelegate>
 @property (weak, nonatomic) IBOutlet UITableView *myTableview;
-@property(nonatomic,strong)NSString *key;
 @property(nonatomic,strong)NSString *OrderStatus;
 @end

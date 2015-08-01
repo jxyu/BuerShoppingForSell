@@ -12,5 +12,7 @@
 @interface chanpinEditViewController : BaseNavigationController
 @property (weak, nonatomic) IBOutlet UITableView *mytableView;
 @property (weak, nonatomic) IBOutlet UIView *bottomBackView;
+@property (nonatomic) int isforSell;
+@property (nonatomic,strong) NSArray * good_list;
 
 @end

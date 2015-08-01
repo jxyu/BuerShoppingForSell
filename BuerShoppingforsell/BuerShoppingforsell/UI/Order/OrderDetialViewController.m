@@ -7,11 +7,10 @@
 //
 
 #import "OrderDetialViewController.h"
-//#import "DataProvider.h"
+#import "DataProvider.h"
 #import "OrderCellTableViewCell.h"
 #import "UIImageView+WebCache.h"
-//#import "Pingpp.h"
-//#import "PingJiaViewController.h"
+#import "AppDelegate.h"
 
 @interface OrderDetialViewController ()<UITableViewDataSource,UITableViewDelegate,UIActionSheetDelegate>
 
@@ -32,8 +31,8 @@
     extend_order_common=[[NSDictionary alloc] init];
     order_info=[[NSDictionary alloc] init];
     goods_list=[[NSArray alloc] init];
-//    [self RequestData];
-//    [self InitAllView];
+    [self RequestData];
+    [self InitAllView];
 }
 
 -(void)InitAllView
@@ -45,14 +44,15 @@
 
 -(void)RequestData
 {
-//    DataProvider * dataprovider=[[DataProvider alloc] init];
-//    [dataprovider setDelegateObject:self setBackFunctionName:@"RequestDataBackCall:"];
-//    [dataprovider GetOrderDetialWithKey:_key andorder_id:_orderid];
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"RequestDataBackCall:"];
+    [dataprovider GetOrderDetialwithkey:_key andorder_id:_orderid];
 }
 -(void)RequestDataBackCall:(id)dict
 {
     NSLog(@"%@",dict);
-    if (!dict[@"datas"][@"error"]) {
+    if (!dict[@"datas"][@"error"])
+    {
         order_info=dict[@"datas"][@"order_info"];
         extend_order_common=dict[@"datas"][@"order_info"][@"extend_order_common"];
         goods_list=dict[@"datas"][@"order_info"][@"goods_list"];
@@ -215,13 +215,13 @@
 
 -(void)BuildBottombutton
 {
-    if ([order_info[@"order_state"] isEqualToString:@"10"]) {
+    if ([_orderStatus isEqualToString:@"0"]) {
         UIButton * btn_pay=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
         btn_pay.layer.masksToBounds=YES;
         btn_pay.layer.cornerRadius=5;
         btn_pay.layer.borderWidth=1;
         btn_pay.layer.borderColor=[[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] CGColor];
-        [btn_pay setTitle:@"付款" forState:UIControlStateNormal];
+        [btn_pay setTitle:@"接单" forState:UIControlStateNormal];
         [btn_pay addTarget:self action:@selector(payforOrder:) forControlEvents:UIControlEventTouchUpInside];
         [btn_pay setTitleColor:[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] forState:UIControlStateNormal];
         btn_pay.titleLabel.font=[UIFont systemFontOfSize:15];
@@ -232,13 +232,12 @@
         btn_cancelOrder.layer.borderWidth=1;
         btn_cancelOrder.layer.borderColor=[[UIColor blackColor] CGColor];
         [btn_cancelOrder setTitle:@"取消订单" forState:UIControlStateNormal];
-//        btn_cancelOrder.tag=indexPath.section;
         [btn_cancelOrder addTarget:self action:@selector(CancelOrderClick:) forControlEvents:UIControlEventTouchUpInside];
         [btn_cancelOrder setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
         [_bottomVeiw addSubview:btn_cancelOrder];
     }
-    if ([order_info[@"order_state"] isEqualToString:@"20"]) {
+    if ([_orderStatus isEqualToString:@"20"]) {
         UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
         btn_cancelOrder.layer.masksToBounds=YES;
         btn_cancelOrder.layer.cornerRadius=5;
@@ -250,171 +249,73 @@
         btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
         [_bottomVeiw addSubview:btn_cancelOrder];
     }
-    if ([order_info[@"order_state"] isEqualToString:@"30"]) {
-        UIButton * btn_pay=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
-        btn_pay.layer.masksToBounds=YES;
-        btn_pay.layer.cornerRadius=5;
-        btn_pay.layer.borderWidth=1;
-        btn_pay.layer.borderColor=[[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] CGColor];
-        [btn_pay setTitle:@"确认收货" forState:UIControlStateNormal];
-        [btn_pay setTitleColor:[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] forState:UIControlStateNormal];
-        btn_pay.titleLabel.font=[UIFont systemFontOfSize:15];
-//        btn_pay.tag=indexPath.section;
-        [btn_pay addTarget:self action:@selector(OrderForSure:) forControlEvents:UIControlEventTouchUpInside];
-        [_bottomVeiw addSubview:btn_pay];
-        UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(btn_pay.frame.origin.x-80, 10, 70, 40)];
-        btn_cancelOrder.layer.masksToBounds=YES;
-        btn_cancelOrder.layer.cornerRadius=5;
-        btn_cancelOrder.layer.borderWidth=1;
-        btn_cancelOrder.layer.borderColor=[[UIColor blackColor] CGColor];
-        [btn_cancelOrder setTitle:@"退/换货" forState:UIControlStateNormal];
-        [btn_cancelOrder setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-        btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
-//        btn_cancelOrder.tag=indexPath.section;
-        [btn_cancelOrder addTarget:self action:@selector(ChangeGoodsClick:) forControlEvents:UIControlEventTouchUpInside];
-        [_bottomVeiw addSubview:btn_cancelOrder];
-    }
-    if ([order_info[@"order_state"] isEqualToString:@"40"]) {
-        if ([[NSString stringWithFormat:@"%@",order_info[@"if_evaluation"]] isEqualToString:@"1"]) {
-            UIButton * btn_pay=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
-            btn_pay.layer.masksToBounds=YES;
-            btn_pay.layer.cornerRadius=5;
-            btn_pay.layer.borderWidth=1;
-            btn_pay.layer.borderColor=[[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] CGColor];
-            [btn_pay setTitle:@"评价" forState:UIControlStateNormal];
-//            btn_pay.tag=indexPath.section;
-            [btn_pay setTitleColor:[UIColor colorWithRed:255/255.0 green:153/255.0 blue:0/255.0 alpha:1.0] forState:UIControlStateNormal];
-            btn_pay.titleLabel.font=[UIFont systemFontOfSize:15];
-            [btn_pay addTarget:self action:@selector(PingjiaVCJumpTo:) forControlEvents:UIControlEventTouchUpInside];
-            [_bottomVeiw addSubview:btn_pay];
-        }
-        UIView * lastview=[_bottomVeiw.subviews lastObject];
-        UIButton * btn_ChangeGoods=[[UIButton alloc] initWithFrame:CGRectMake([[_bottomVeiw.subviews lastObject] isKindOfClass:[UIButton class]]?lastview.frame.origin.x-80:_bottomVeiw.frame.size.width-80, 10, 70, 40)];
-        btn_ChangeGoods.layer.masksToBounds=YES;
-        btn_ChangeGoods.layer.cornerRadius=5;
-        btn_ChangeGoods.layer.borderWidth=1;
-        btn_ChangeGoods.layer.borderColor=[[UIColor blackColor] CGColor];
-        [btn_ChangeGoods setTitle:@"退/换货" forState:UIControlStateNormal];
-        [btn_ChangeGoods setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-//        btn_ChangeGoods.tag=indexPath.section;
-        [btn_ChangeGoods addTarget:self action:@selector(ChangeGoodsClick:) forControlEvents:UIControlEventTouchUpInside];
-        btn_ChangeGoods.titleLabel.font=[UIFont systemFontOfSize:15];
-        [_bottomVeiw addSubview:btn_ChangeGoods];
-        UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(btn_ChangeGoods.frame.origin.x-80, 10, 70, 40)];
+    if ([_orderStatus isEqualToString:@"30"]) {
+        UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
         btn_cancelOrder.layer.masksToBounds=YES;
         btn_cancelOrder.layer.cornerRadius=5;
         btn_cancelOrder.layer.borderWidth=1;
         btn_cancelOrder.layer.borderColor=[[UIColor blackColor] CGColor];
         [btn_cancelOrder setTitle:@"删除订单" forState:UIControlStateNormal];
         [btn_cancelOrder setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-//        btn_cancelOrder.tag=indexPath.section;
+        btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
+        [btn_cancelOrder addTarget:self action:@selector(delOrder:) forControlEvents:UIControlEventTouchUpInside];
+        [_bottomVeiw addSubview:btn_cancelOrder];
+    }
+    if ([_orderStatus isEqualToString:@"40"]) {
+        UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(_bottomVeiw.frame.size.width-80, 10, 70, 40)];
+        btn_cancelOrder.layer.masksToBounds=YES;
+        btn_cancelOrder.layer.cornerRadius=5;
+        btn_cancelOrder.layer.borderWidth=1;
+        btn_cancelOrder.layer.borderColor=[[UIColor blackColor] CGColor];
+        [btn_cancelOrder setTitle:@"删除订单" forState:UIControlStateNormal];
+        [btn_cancelOrder setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
         [btn_cancelOrder addTarget:self action:@selector(delOrder:) forControlEvents:UIControlEventTouchUpInside];
         btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
         [_bottomVeiw addSubview:btn_cancelOrder];
     }
+    
 }
 
 #pragma mark 订单按钮操作
 
 /**
- *  付款
+ *  接单
  *
  *  @param sender <#sender description#>
  */
 -(void)payforOrder:(UIButton *)sender
 {
-    UIActionSheet *choiceSheet = [[UIActionSheet alloc] initWithTitle:nil
-                                                             delegate:self
-                                                    cancelButtonTitle:@"取消"
-                                               destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"支付宝充值", @"微信充值", nil];
-    
-    choiceSheet.tag=1;
-    [choiceSheet showInView:self.view];
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"jiedanBackCall:"];
+    [dataprovider jiedanWithKey:_key andorder_id:_orderid andorder_seller_message:@""];
     
 }
--(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+
+-(void)jiedanBackCall:(id)dict
 {
-    if (actionSheet.tag==1) {
-        
-        NSLog(@"%ld",(long)buttonIndex);
-        NSString *payWay=@"";
-        if (buttonIndex==0) {
-            payWay=@"alipay";
-            if (order_info[@"order_amount"]) {
-                NSDictionary * prm=@{@"key":_key,@"pdramount":order_info[@"order_amount"],@"channel":payWay};
-//                DataProvider * dataprovider=[[DataProvider alloc] init];
-//                [dataprovider setDelegateObject:self setBackFunctionName:@"GetChargeBackCall:"];
-//                [dataprovider GetChargeObject:prm];
-            }
-        }else if(buttonIndex==1)
-        {
-            payWay=@"wx";
-            if (order_info[@"order_amount"]) {
-                NSDictionary * prm=@{@"key":_key,@"pdramount":order_info[@"order_amount"],@"channel":payWay};
-//                DataProvider * dataprovider=[[DataProvider alloc] init];
-//                [dataprovider setDelegateObject:self setBackFunctionName:@"GetChargeBackCall:"];
-//                [dataprovider GetChargeObject:prm];
-            }
-        }
-        
+    NSLog(@"接单%@",dict);
+    if ([[NSString stringWithFormat:@"%@",dict[@"datas"]] isEqualToString:@"1"]) {
     }
-    else
-    {
-        if (buttonIndex==0) {
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"tel://%@",order_info[@"store_phone"]]]];
-        }
-    }
-    
-}
--(void)GetChargeBackCall:(id)dict
-{
-    
 }
 
 -(void)CancelOrderClick:(UIButton * )sender
 {
-//    DataProvider * dataprovider=[[DataProvider alloc] init];
-//    [dataprovider setDelegateObject:self setBackFunctionName:@"CanCelOrderBackCall:"];
-//    if ([order_info[@"order_state"] isEqualToString:@"10"]) {
-//        [dataprovider CancalOrderWithOutPay:order_info[@"order_id"] andkey:_key];
-//    }else
-//    {
-//        [dataprovider CancalOrderPayAlready:order_info[@"order_id"] andkey:_key];
-//    }
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"CanCelOrderBackCall:"];
+    [dataprovider CancelOrderWithkey:_key andorder_id:_orderid];
 }
 -(void)CanCelOrderBackCall:(id)dict
 {
     NSLog(@"%@",dict);
     if ([[NSString stringWithFormat:@"%@",dict[@"datas"]] isEqualToString:@"1"]) {
-        [self.navigationController popViewControllerAnimated:YES];
     }
-}
--(void)OrderForSure:(UIButton *)sender
-{
-//    DataProvider * dataprovider=[[DataProvider alloc] init];
-//    [dataprovider setDelegateObject:self setBackFunctionName:@"CanCelOrderBackCall:"];
-//    [dataprovider OrderForSure:order_info[@"order_id"] andkey:_key];
-}
-
--(void)ChangeGoodsClick:(UIButton *)sender
-{
-    UIActionSheet *choiceSheet = [[UIActionSheet alloc] initWithTitle:nil
-                                                             delegate:self
-                                                    cancelButtonTitle:@"取消"
-                                               destructiveButtonTitle:nil
-                                                    otherButtonTitles:[NSString stringWithFormat:@"店铺电话:%@",order_info[@"store_phone"]], nil];
-    
-    choiceSheet.tag=2;
-    [choiceSheet showInView:self.view];
-    
 }
 
 -(void)delOrder:(UIButton * )sender
 {
-//    DataProvider * dataprovider=[[DataProvider alloc] init];
-//    [dataprovider setDelegateObject:self setBackFunctionName:@"CanCelOrderBackCall:"];
-//    [dataprovider DelOrder:order_info[@"order_id"] andkey:_key];
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"CanCelOrderBackCall:"];
+    [dataprovider DelOrderWithkey:_key andorder_id:_orderid];
 }
 
 -(void)PingjiaVCJumpTo:(UIButton *)sender
@@ -463,6 +364,11 @@
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [(AppDelegate *)[[UIApplication sharedApplication] delegate] hiddenTabBar];
 }
 
 @end

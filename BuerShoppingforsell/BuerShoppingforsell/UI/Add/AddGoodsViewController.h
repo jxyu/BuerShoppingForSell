@@ -11,5 +11,6 @@
 
 @interface AddGoodsViewController : BaseNavigationController
 @property (weak, nonatomic) IBOutlet UITableView *myTableview;
+@property (nonatomic,strong) NSString * commonid;
 
 @end

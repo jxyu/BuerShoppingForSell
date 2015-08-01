@@ -7,6 +7,9 @@
 //
 
 #import "AppDelegate.h"
+#import <MAMapKit/MAMapKit.h>
+
+#define APIKey @"d57667019f79800b1cac4d682465f035"
 
 @interface AppDelegate ()
 
@@ -18,6 +21,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
+    
+    [MAMapServices sharedServices].apiKey = (NSString *)APIKey;
     
     
     /**
