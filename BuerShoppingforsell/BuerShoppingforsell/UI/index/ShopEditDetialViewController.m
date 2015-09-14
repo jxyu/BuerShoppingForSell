@@ -178,9 +178,12 @@
 }
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    CGFloat height=80;
+    CGFloat height=44;
+    if (indexPath.section==0&&indexPath.row==0) {
+        height=80;
+    }
     if (indexPath.section==4) {
-        height=60;
+        height=44;
     }
     return height;
 }
@@ -199,12 +202,17 @@
         cell.txt_filed.hidden=YES;
         btn_avaer=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-70, 10, 60, 60)];
         if (img_avatarimg) {
-            [btn_avaer setImage:img_avatarimg forState:UIControlStateNormal];
+            UIImageView * img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
+            img_image.image=img_avatarimg;
+            [btn_avaer addSubview:img_image];
         }
         else
         {
             if (!([prm[@"store_label"] isKindOfClass:[NSNull class]]||[prm[@"store_label"] isEqualToString:@""])) {
-                [btn_avaer.imageView sd_setImageWithURL:[NSURL URLWithString:prm[@"store_label"]] placeholderImage:[UIImage imageNamed:@"Add_img_icon"]];
+                
+                UIImageView * img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
+                [img_image sd_setImageWithURL:[NSURL URLWithString:prm[@"store_label"]] placeholderImage:[UIImage imageNamed:@"Add_img_icon"]];
+                [btn_avaer addSubview:img_image];
             }
             else
             {
@@ -286,7 +294,7 @@
     if (indexPath.section==4) {
         cell.lbl_title.hidden=YES;
         cell.txt_filed.hidden=YES;
-        UIButton * btn_save=[[UIButton alloc] initWithFrame:CGRectMake(20, 10, cell.frame.size.width-40, 40)];
+        UIButton * btn_save=[[UIButton alloc] initWithFrame:CGRectMake(20, 0, cell.frame.size.width-40, 44)];
         [btn_save setTitle:@"保存" forState:UIControlStateNormal];
         [btn_save setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         btn_save.backgroundColor=[UIColor colorWithRed:115/255.0 green:73/255.0 blue:139/255.0 alpha:1.0];

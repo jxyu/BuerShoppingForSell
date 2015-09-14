@@ -16,7 +16,7 @@
 //#import "LMContainsLMComboxScrollView.h"
 //#import "LMComBoxView.h"
 
-@interface AddGoodsViewController ()<ZLPhotoPickerViewControllerDelegate,ZLPhotoPickerBrowserViewControllerDataSource,ZLPhotoPickerBrowserViewControllerDelegate,UITableViewDelegate,UITableViewDataSource,XCMultiTableViewDataSource,UITextFieldDelegate>
+@interface AddGoodsViewController ()<ZLPhotoPickerViewControllerDelegate,ZLPhotoPickerBrowserViewControllerDataSource,ZLPhotoPickerBrowserViewControllerDelegate,UITableViewDelegate,UITableViewDataSource,XCMultiTableViewDataSource,UITextFieldDelegate,UITextViewDelegate>
 @property (nonatomic , strong) NSMutableArray *assets;
 @property (weak,nonatomic) UIScrollView *scrollView;
 @property (strong, nonatomic) MLTableAlert *alert;
@@ -43,15 +43,30 @@
     XCMultiTableView *biaogetableView;
     
     NSArray * spec_list;
+    NSString * type_id;
     
     NSString * guige1;
     NSString * guige2;
+    NSString * guigename1;
+    NSString * guigename2;
     NSString * guigetext1;
     NSString * guigetext2;
+    NSArray * GuigeValueid1;
+    NSArray * GuigeValueid2;
     NSArray * priceArray;
     NSArray * kuncunArray;
     NSArray * specPriceArray;
     
+    NSString * g_price;
+    NSString * goods_promotion_price;
+    NSString * g_storage;
+    NSString * images;
+    int uplodaimage;
+    NSMutableArray * img_array;
+    NSMutableArray * request_spec;
+    
+    NSArray *array1;//分割字符串后
+    NSArray *array2;
 }
 - (NSMutableArray *)assets{
     if (!_assets) {
@@ -69,7 +84,6 @@
     DataProvider * dataprovider=[[DataProvider alloc] init];
     [dataprovider setDelegateObject:self setBackFunctionName:@"RequestDataBackCall:"];
     [dataprovider GetGoodDetialWithkey:userinfoWithFile[@"key"] andcommonid:_commonid];
-    
 }
 -(void)RequestDataBackCall:(id)dict
 {
@@ -77,17 +91,29 @@
     if (!dict[@"datas"][@"error"]) {
         GoodName=dict[@"datas"][@"common_info"][@"goods_name"];
         GoodDetial=dict[@"datas"][@"common_info"][@"goods_jingle"];
+        g_price=dict[@"datas"][@"common_info"][@"goods_price"];
+        goods_promotion_price=dict[@"datas"][@"common_info"][@"goods_promotion_price"];
+        g_storage=dict[@"datas"][@"common_info"][@"goods_storage"];
+        self.assets=dict[@"datas"][@"common_info"][@"goods_image"];
         [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
+        [self initData];
+        [self reloadScrollView];
     }
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
     _lblTitle.text=@"商品详情编辑";
     _lblTitle.textColor=[UIColor whiteColor];
+    g_price=@"0.00";
+    goods_promotion_price=@"0.00";
+    g_storage=@"0.00";
     [self addLeftbuttontitle:@"取消"];
     [self addRightbuttontitle:@"保存"];
     [self LoadAllData];
     [self initData];
+    uplodaimage=0;
+    img_array=[[NSMutableArray alloc] init];
+    request_spec=[[NSMutableArray alloc] init];
     _myTableview.delegate=self;
     _myTableview.dataSource=self;
     _myTableview.tag=1;
@@ -97,70 +123,106 @@
 }
 
 - (void)initData {
-    headData = [NSMutableArray arrayWithCapacity:10];
-    [headData addObject:guige1?guige1:@"规格1"];
-    [headData addObject:guige2?guige2:@"规格2"];
-    [headData addObject:@"价格"];
-    [headData addObject:@"库存"];
-    [headData addObject:@"天天特价价格(选填)"];
-    NSArray *array1=[[NSArray alloc] init];
-    NSArray *array2=[[NSArray alloc] init];
-    int rowsNumber=1;
-    if (guigetext1.length>0) {
-        NSRange range=[guigetext1 rangeOfString:@","];
-        if (range.length>0) {
-            array1= [guigetext1 componentsSeparatedByString:@","];
-        }
-        else
-        {
-            array1= [guigetext1 componentsSeparatedByString:@"，"];
-        }
-        
-        if (guigetext2.length>0) {
-            NSRange range1=[guigetext1 rangeOfString:@","];
-            if (range1.length>0) {
-                array2= [guigetext2 componentsSeparatedByString:@","];
+    @try {
+        headData = [NSMutableArray arrayWithCapacity:10];
+        [headData addObject:guigename1?guigename1:@"规格1"];
+        [headData addObject:guigename2?guigename2:@"规格2"];
+        [headData addObject:@"价格"];
+        [headData addObject:@"库存"];
+        [headData addObject:@"天天特价价格(选填)"];
+        array1=[[NSArray alloc] init];
+        array2=[[NSArray alloc] init];
+        int rowsNumber=1;
+        if (guigetext1.length>0) {
+            NSRange range=[guigetext1 rangeOfString:@","];
+            if (range.length>0) {
+                array1= [guigetext1 componentsSeparatedByString:@","];
             }
             else
             {
-                array2= [guigetext2 componentsSeparatedByString:@"，"];
+                array1= [guigetext1 componentsSeparatedByString:@"，"];
             }
-            rowsNumber=(int)array1.count*(int)array2.count;
-        }
-        else
-        {
-            rowsNumber=(int)array1.count;
-        }
-    }
-    
-    
-    priceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
-    kucunMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
-    specpriceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
-    leftTableData = [NSMutableArray arrayWithCapacity:10];
-    NSMutableArray *one = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 0; i < rowsNumber; i++) {
-        [one addObject:[NSString stringWithFormat:@"ki-%d", i]];
-    }
-    [leftTableData addObject:one];
-    
-    rightTableData = [NSMutableArray arrayWithCapacity:10];
-    NSMutableArray *oneR = [NSMutableArray arrayWithCapacity:10];
-    for (int i = 0; i < rowsNumber; i++) {
-        NSMutableArray *ary = [NSMutableArray arrayWithCapacity:10];
-        for (int j = 0; j < 5; j++) {
-            if (j == 0) {
-                [ary addObject:[NSString stringWithFormat:@"%@",array1.count>0?array1[i/(array1.count)]:@"示例"]];
-            }else if (j == 1) {
-                [ary addObject:[NSString stringWithFormat:@"%@",array2.count>0?array2[i%(array2.count)]:@"示例"]];
+            
+            if (guigetext2.length>0) {
+                NSRange range1=[guigetext1 rangeOfString:@","];
+                if (range1.length>0) {
+                    array2= [guigetext2 componentsSeparatedByString:@","];
+                }
+                else
+                {
+                    array2= [guigetext2 componentsSeparatedByString:@"，"];
+                }
+                rowsNumber=(int)array1.count*(int)array2.count;
             }
-            else {
-                [ary addObject:[NSNumber numberWithInt:0]];
+            else
+            {
+                rowsNumber=(int)array1.count;
             }
         }
-        [oneR addObject:ary];
+        
+        
+        priceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        
+        kucunMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        specpriceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        for (int i=0; i<rowsNumber; i++) {
+            [priceMutableArray setObject:[NSString stringWithFormat:@"0"] atIndexedSubscript:i];
+            [kucunMutableArray setObject:[NSString stringWithFormat:@"0"] atIndexedSubscript:i];
+            [specpriceMutableArray setObject:[NSString stringWithFormat:@"0"] atIndexedSubscript:i];
+        }
+        leftTableData = [NSMutableArray arrayWithCapacity:10];
+        NSMutableArray *one = [NSMutableArray arrayWithCapacity:10];
+        for (int i = 0; i < rowsNumber; i++) {
+            [one addObject:[NSString stringWithFormat:@"ki-%d", i]];
+        }
+        [leftTableData addObject:one];
+        
+        rightTableData = [NSMutableArray arrayWithCapacity:10];
+        NSMutableArray *oneR = [NSMutableArray arrayWithCapacity:10];
+        for (int i = 0; i < rowsNumber; i++) {
+            NSMutableArray *ary = [NSMutableArray arrayWithCapacity:10];
+            for (int j = 0; j < 5; j++) {
+                if (j == 0) {
+                    [ary addObject:[NSString stringWithFormat:@"%@",array1.count>0?array1[i/(array1.count)]:@"无"]];
+                }else if (j == 1) {
+                    [ary addObject:[NSString stringWithFormat:@"%@",array2.count>0?array2[i%(array2.count)]:@"无"]];
+                }
+                else if (j == 2) {
+                    [ary addObject:g_price];
+                }
+                else if (j == 3) {
+                    [ary addObject:g_storage];
+                }
+                else {
+                    [ary addObject:goods_promotion_price];
+                }
+                
+            }
+            [oneR addObject:ary];
+            if (GuigeValueid1) {
+                if (GuigeValueid2) {
+                    NSDictionary * item=@{GuigeValueid1[i/(array1.count)]:array1[i/(array1.count)],GuigeValueid2[i%(array2.count)]:array2[i%(array2.count)]};
+                    NSDictionary * requsetitem=@{@"sp_value":item,@"zuhe_id":[NSString stringWithFormat:@"i_%@%@",GuigeValueid1[i/(array1.count)],GuigeValueid2[i%(array2.count)]]};
+                    [request_spec addObject:requsetitem];
+                }
+                else
+                {
+                    NSDictionary * item=@{GuigeValueid1[i/(array1.count)]:array1[i/(array1.count)]};
+                    NSDictionary * requsetitem=@{@"sp_value":item,@"zuhe_id":[NSString stringWithFormat:@"i_%@",GuigeValueid1[i/(array1.count)]]};
+                    [request_spec addObject:requsetitem];
+                }
+            }
+        }
+        [rightTableData addObject:oneR];
     }
-    [rightTableData addObject:oneR];
+    @catch (NSException *exception) {
+        NSLog(@"建立表格时出错");
+        NSLog(@"%@",exception);
+    }
+    @finally {
+        
+    }
+    
 }
 -(void)buildheaderview
 {
@@ -224,6 +286,7 @@
             UITextField * txt_name=[[UITextField alloc] initWithFrame:CGRectMake(x, 10, cell.frame.size.width-x-10, 30)];
             txt_name.textAlignment=NSTextAlignmentRight;
             txt_name.tag=1000;
+            txt_name.delegate=self;
             if (GoodName) {
                 txt_name.text=GoodName;
             }
@@ -244,6 +307,7 @@
             if (GoodDetial) {
                 txtview_detial.text=GoodDetial;
             }
+            txtview_detial.delegate=self;
             [cell addSubview:txtview_detial];
         }
     }
@@ -271,7 +335,7 @@
             }
             else
             {
-                txt_name.placeholder=@"格式如下：红色，粉色，绿色，";
+                txt_name.placeholder=@"格式如下：红色，粉色";
             }
             txt_name.tag=1001;
             txt_name.delegate=self;
@@ -292,7 +356,7 @@
             }
             else
             {
-                txt_name.placeholder=@"格式如下：XL，2XL，M，";
+                txt_name.placeholder=@"格式如下：XL，2XL，M";
             }
             txt_name.delegate=self;
             txt_name.tag=1002;
@@ -486,7 +550,10 @@
     return [UIColor clearColor];
 }
 
-
+- (void)textViewDidEndEditing:(UITextView *)textView
+{
+    GoodDetial=textView.text;
+}
 
 - (void)textFieldDidEndEditing:(UITextField *)textField
 {
@@ -496,16 +563,32 @@
         int yu=(int)textField.tag%10;
         switch (yu) {
             case 2:
+                
                 [priceMutableArray setObject:textField.text atIndexedSubscript:chu];
+                g_price=textField.text;
                 break;
             case 3:
                 [kucunMutableArray setObject:textField.text atIndexedSubscript:chu];
+                g_storage=textField.text;
                 break;
             case 4:
                 [specpriceMutableArray setObject:textField.text atIndexedSubscript:chu];
+                goods_promotion_price=textField.text;
                 break;
             default:
                 break;
+        }
+    }
+    else
+    {
+        if (textField.tag==1001) {
+            guigetext1=textField.text;
+        }
+        if (textField.tag==1002) {
+            guigetext2=textField.text;
+        }
+        if (textField.tag==1000) {
+            GoodName=textField.text;
         }
     }
 }
@@ -548,6 +631,7 @@
 {
     NSLog(@"获取规格%@",dict);
     if (!dict[@"datas"][@"error"]) {
+        type_id=dict[@"datas"][@"type_id"];
         spec_list=[[NSArray alloc] initWithArray:dict[@"datas"][@"spec_list"]];
         [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:1] withRowAnimation:UITableViewRowAnimationFade];
     }
@@ -585,11 +669,12 @@
         [self.alert configureSelectionBlock:^(NSIndexPath *selectedIndex){
             if (sender.tag==1) {
                 guige1=spec_list[selectedIndex.row][@"sp_id"];
-                
+                guigename1=spec_list[selectedIndex.row][@"sp_name"];
             }
             else
             {
                 guige2=spec_list[selectedIndex.row][@"sp_id"];
+                guigename2=spec_list[selectedIndex.row][@"sp_name"];
             }
             [sender setTitle:[NSString stringWithFormat:@"%@",spec_list[selectedIndex.row][@"sp_name"]] forState:UIControlStateNormal];
         } andCompletionBlock:^{
@@ -613,6 +698,7 @@
     if (guige1) {
         DataProvider * dataprovider=[[DataProvider alloc] init];
         [dataprovider setDelegateObject:self setBackFunctionName:@"GetGuigeWalueBackCall:"];
+        guigetext1=[guigetext1 stringByReplacingOccurrencesOfString:@"，" withString:@","];
         [dataprovider GetGuigeValueWtihkey:userinfoWithFile[@"key"] andname:guigetext1 andgc_id:classifyTwo andsp_id:guige1];
     }
     else
@@ -620,18 +706,180 @@
         UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:@"请选择规格" delegate:nil cancelButtonTitle:@"好的" otherButtonTitles: nil];
         [alert show];
     }
-//    [self initData];
-//    [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:4] withRowAnimation:UITableViewRowAnimationFade];
 }
 -(void)GetGuigeWalueBackCall:(id)dict
 {
     NSLog(@"dict,%@",dict);
+    if (!dict[@"datas"][@"error"]) {
+        GuigeValueid1=[[NSArray alloc] initWithArray:dict[@"datas"][@"value_id"]];
+        if (guige2) {
+            DataProvider * dataprovider=[[DataProvider alloc] init];
+            [dataprovider setDelegateObject:self setBackFunctionName:@"GetGuiGe2BackCall:"];
+            guigetext2=[guigetext2 stringByReplacingOccurrencesOfString:@"，" withString:@","];
+            [dataprovider GetGuigeValueWtihkey:userinfoWithFile[@"key"] andname:guigetext2 andgc_id:classifyTwo andsp_id:guige2];
+        }
+        else
+        {
+            [self initData];
+            [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:4] withRowAnimation:UITableViewRowAnimationFade];
+        }
+    }
 }
--(void)GetAllPageData
+-(void)GetGuiGe2BackCall:(id)dict
 {
-    
+    NSLog(@"%@",dict);
+    if (!dict[@"datas"][@"error"]) {
+        GuigeValueid2=[[NSArray alloc] initWithArray:dict[@"datas"][@"value_id"]];
+        [self initData];
+        [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:4] withRowAnimation:UITableViewRowAnimationFade];
+    }
 }
 
+-(void)clickRightButton:(UIButton *)sender
+{
+    [self BuildDataAndRequest];
+}
+-(void)BuildDataAndRequest
+{
+    NSArray * imgarray=[[NSArray alloc] initWithArray:[self.scrollView subviews]];
+    if ([imgarray[uplodaimage] isKindOfClass:[UIButton class]]) {
+        UIButton * item=(UIButton *)imgarray[uplodaimage];
+        NSData * imgData=UIImageJPEGRepresentation(item.imageView.image, 1.0);
+        DataProvider * dataprovider=[[DataProvider alloc] init];
+        
+        [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
+        [dataprovider UpLoadGoodImg:imgData andkey:userinfoWithFile[@"key"] andname:@"good_img"];
+    }
+    else
+    {
+        ++uplodaimage;
+        [self BuildDataAndRequest];
+    }
+}
+
+-(void)UploadeImgBackCall:(id)dict
+{
+    
+    NSLog(@"%@",dict);
+    if (!dict[@"datas"][@"error"]) {
+        [img_array addObject:dict[@"datas"][@"image_name"]];
+        if (uplodaimage<self.assets.count-1) {
+            ++uplodaimage;
+            [self BuildDataAndRequest];
+        }
+        else
+        {
+            [SVProgressHUD dismiss];
+            
+            for (int i=0; i<img_array.count; i++) {
+                if (i==0) {
+                    images=[NSString stringWithFormat:@"%@",img_array[i]];
+                }
+                else
+                {
+                    images=[images stringByAppendingString:[NSString stringWithFormat:@",%@",img_array[i]]];
+                }
+            }
+            
+            DataProvider * dataprovider=[[DataProvider alloc] init];
+            [dataprovider setDelegateObject:self setBackFunctionName:@"SaveGoodInfoBackCall:"];
+            [dataprovider SaveGoodInfo:[self GetAllPageData]];
+        }
+    }
+}
+-(NSMutableDictionary *)GetAllPageData
+{
+    NSMutableDictionary * requestPrm=[[NSMutableDictionary alloc] init];
+    if ((!guige1)&&(!guige2)) {
+        //没有规格
+        [requestPrm setObject:userinfoWithFile[@"key"] forKey:@"key"];
+        [requestPrm setObject:classifyTwo forKey:@"cate_id"];
+        [requestPrm setObject:classifyTitle forKey:@"cate_name"];
+        [requestPrm setObject:GoodName forKey:@"g_name"];
+        [requestPrm setObject:type_id forKey:@"type_id"];
+        [requestPrm setObject:g_price forKey:@"g_price"];
+        [requestPrm setObject:goods_promotion_price forKey:@"goods_promotion_price"];
+        [requestPrm setObject:g_storage forKey:@"g_storage"];
+        [requestPrm setObject:GoodDetial forKey:@"goods_jingle"];
+        [requestPrm setObject:images forKey:@"image_all"];
+        [requestPrm setValue:img_array[0] forKey:@"image_path"];
+        if (_commonid) {
+            [requestPrm setValue:_commonid forKey:@"goods_commonid"];
+        }
+    }
+    else
+    {
+        [requestPrm setObject:userinfoWithFile[@"key"] forKey:@"key"];
+        [requestPrm setObject:classifyTwo forKey:@"cate_id"];
+        [requestPrm setObject:classifyTitle forKey:@"cate_name"];
+        [requestPrm setObject:GoodName forKey:@"g_name"];
+        [requestPrm setObject:type_id forKey:@"type_id"];
+        [requestPrm setObject:GoodDetial forKey:@"goods_jingle"];
+        [requestPrm setObject:images forKey:@"image_all"];
+        [requestPrm setObject:img_array[0] forKey:@"image_path"];
+        [requestPrm setObject:[self buileExcleData] forKey:@"spec"];
+        if (guige2) {
+            NSMutableDictionary * sp_name=[[NSMutableDictionary alloc] init];
+            [sp_name setObject:guigename1 forKeyedSubscript:guige1];
+            [sp_name setObject:guigename2 forKeyedSubscript:guige2];
+            [requestPrm setObject:sp_name forKey:@"sp_name"];
+        }
+        else
+        {
+            NSMutableDictionary * sp_name=[[NSMutableDictionary alloc] init];
+            [sp_name setObject:guigename1 forKeyedSubscript:guige1];
+            [requestPrm setObject:sp_name forKey:@"sp_name"];
+        }
+        [requestPrm setObject:[self buildsp_value] forKeyedSubscript:@"sp_value"];
+    }
+    return requestPrm;
+}
+-(NSMutableDictionary *)buildsp_value
+{
+    
+    NSMutableDictionary * sp_value=[[NSMutableDictionary alloc] init];
+    for (int i=0; i<array1.count; i++) {
+        NSDictionary * itemdict=@{GuigeValueid1[i]:array1[i]};
+        [sp_value setObject:itemdict forKeyedSubscript:guige1];
+    }
+    if (guige2) {
+        for (int i=0; i<array2.count; i++) {
+            NSDictionary * itemdict=@{GuigeValueid2[i]:array2[i]};
+            [sp_value setObject:itemdict forKeyedSubscript:guige2];
+        }
+    }
+    return sp_value;
+}
+-(NSMutableDictionary *)buileExcleData
+{
+    NSMutableDictionary * spec=[[NSMutableDictionary alloc] init];
+    @try {
+        NSArray * price1=[[NSArray alloc] initWithArray:priceMutableArray];
+        NSArray * specprice1=[[NSArray alloc] initWithArray:specpriceMutableArray];
+        NSArray * kucun1=[[NSArray alloc] initWithArray:kucunMutableArray];
+        NSArray * requestspec=[[NSArray alloc] initWithArray:request_spec];
+        for (int i=0; i<price1.count; i++) {
+            
+            NSDictionary * itemdict=@{@"price":price1[i],@"goods_promotion_price":specprice1[i],@"stock":kucun1[i],@"sp_value":request_spec[i][@"sp_value"]};
+            [spec setObject:itemdict forKey:requestspec[i][@"zuhe_id"]];
+        }
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@",exception);
+        NSLog(@"建立表格请求数据时出错");
+    }
+    @finally {
+        return spec;
+    }
+    
+}
+-(void)SaveGoodInfoBackCall:(id)dict
+{
+    NSLog(@"保存返回:%@",dict);
+    if (dict[@"datas"][@"common_id"]) {
+        [SVProgressHUD showSuccessWithStatus:@"发布成功" maskType:SVProgressHUDMaskTypeBlack];
+    }
+}
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

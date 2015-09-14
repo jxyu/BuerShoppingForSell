@@ -169,6 +169,20 @@
  *  @param sp_id <#sp_id description#>
  */
 -(void)GetGuigeValueWtihkey:(NSString *)key andname:(NSString *)name andgc_id:(NSString *)gc_id andsp_id:(NSString *)sp_id;
+/**
+ *  商品图片上传
+ *
+ *  @param imagedata <#imagedata description#>
+ *  @param key       <#key description#>
+ *  @param name      <#name description#>
+ */
+-(void)UpLoadGoodImg:(NSData *)imagedata andkey:(NSString *)key andname:(NSString *)name;
+/**
+ *  商品发布
+ *
+ *  @param prm <#prm description#>
+ */
+-(void)SaveGoodInfo:(id)prm;
 
 
 

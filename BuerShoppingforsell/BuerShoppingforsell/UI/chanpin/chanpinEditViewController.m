@@ -32,6 +32,7 @@
     [super viewDidLoad];
     _lblTitle.text=@"产品管理";
     _lblTitle.textColor=[UIColor whiteColor];
+    self.view.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
     [self addRightbuttontitle:@"取消"];
     isfooterrefresh=NO;
     curpage=1;
@@ -261,7 +262,7 @@
     }
     UIButton * btn_shangjia=[[UIButton alloc] initWithFrame:CGRectMake(0, 0, _bottomBackView.frame.size.width/2, _bottomBackView.frame.size.height)];
     btn_shangjia.backgroundColor=[UIColor colorWithRed:255/255.0 green:204/255.0 blue:3/255.0 alpha:1.0];
-    [btn_shangjia addTarget:self action:@selector(showorunshowBackCall:) forControlEvents:UIControlEventTouchUpInside];
+    [btn_shangjia addTarget:self action:@selector(showorunshowGoods:) forControlEvents:UIControlEventTouchUpInside];
     if (_isforSell==0) {
         [btn_shangjia setTitle:@"下架商品" forState:UIControlStateNormal];
     }
@@ -355,6 +356,7 @@
 -(void)showorunshowBackCall:(id)dict
 {
     NSLog(@"%@",dict);
+    [_mytableView.header beginRefreshing];
 }
 -(void)DelGoods:(UIButton *)sender
 {

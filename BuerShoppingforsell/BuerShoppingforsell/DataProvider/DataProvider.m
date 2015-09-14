@@ -211,6 +211,22 @@
     }
 }
 
+-(void)UpLoadGoodImg:(NSData *)imagedata andkey:(NSString *)key andname:(NSString *)name
+{
+    if (imagedata&&key) {
+        NSString * url=[NSString stringWithFormat:@"%@index.php?act=seller_album&op=image_upload",Url];
+        NSDictionary * prm=@{@"key":key,@"name":name};
+        [self ShowOrderuploadImageWithImage:imagedata andurl:url andprm:prm andkey:key andname:name];
+    }
+}
+
+-(void)SaveGoodInfo:(id)prm
+{
+    if (prm) {
+        NSString * url=[NSString stringWithFormat:@"%@index.php?act=seller_goods&op=goods_add",Url];
+        [self PostRequest:url andpram:prm];
+    }
+}
 
 
 

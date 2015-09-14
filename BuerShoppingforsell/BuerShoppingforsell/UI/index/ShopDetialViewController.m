@@ -99,9 +99,9 @@
     SDCycleScrollView *_cycleScrollView = [SDCycleScrollView cycleScrollViewWithFrame:CGRectMake(0, 0, myheaderView.frame.size.width, 175) imagesGroup:images ];
     _cycleScrollView.pageControlAliment = SDCycleScrollViewPageContolAlimentRight;
     [myheaderView addSubview:_cycleScrollView];
-    UIView * BackVeiw_StoreTitle=[[UIView alloc] initWithFrame:CGRectMake(0, _cycleScrollView.frame.size.height-45, myheaderView.frame.size.width, 50)];
+    UIView * BackVeiw_StoreTitle=[[UIView alloc] initWithFrame:CGRectMake(0, _cycleScrollView.frame.size.height-55, myheaderView.frame.size.width, 55)];
     BackVeiw_StoreTitle.backgroundColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3];
-    UILabel * lbl_StoreName=[[UILabel alloc] initWithFrame:CGRectMake(100, 0, 200, 20)];
+    UILabel * lbl_StoreName=[[UILabel alloc] initWithFrame:CGRectMake(100, 7, 200, 20)];
     lbl_StoreName.text=storeInfo[@"store_name"];
     lbl_StoreName.textColor=[UIColor whiteColor];
     [BackVeiw_StoreTitle addSubview:lbl_StoreName];
@@ -111,16 +111,16 @@
 //    weisheng.hasAnimation = YES;
 //    [BackVeiw_StoreTitle addSubview:weisheng];
     [myheaderView addSubview:BackVeiw_StoreTitle];
-    UIImageView * img_StoreLogo=[[UIImageView alloc] initWithFrame:CGRectMake(10, _cycleScrollView.frame.size.height-75, 80, 80)];
+    UIImageView * img_StoreLogo=[[UIImageView alloc] initWithFrame:CGRectMake(10, _cycleScrollView.frame.size.height-80, 80, 80)];
     [img_StoreLogo sd_setImageWithURL:[NSURL URLWithString:storeInfo[@"store_label"]] placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
     [myheaderView addSubview:img_StoreLogo];
     UIView * BackView_StoreInfo=[[UIView alloc] initWithFrame:CGRectMake(0, _cycleScrollView.frame.size.height+5, SCREEN_WIDTH, 50)];
     BackView_StoreInfo.backgroundColor=[UIColor whiteColor];
-    UIImageView * img_location=[[UIImageView alloc] initWithFrame:CGRectMake(10, 17, 12, 16)];
+    UIImageView * img_location=[[UIImageView alloc] initWithFrame:CGRectMake(15, 13, 12, 16)];
     img_location.image=[UIImage imageNamed:@"location_icon"];
     [BackView_StoreInfo addSubview:img_location];
     CGFloat x=img_location.frame.size.width+img_location.frame.origin.x;
-    UILabel * lbl_address=[[UILabel alloc] initWithFrame:CGRectMake(img_location.frame.size.width+img_location.frame.origin.x, 9, SCREEN_WIDTH-x-66, 40)];
+    UILabel * lbl_address=[[UILabel alloc] initWithFrame:CGRectMake(img_location.frame.size.width+img_location.frame.origin.x+10, 1, SCREEN_WIDTH-x-76, 40)];
     lbl_address.textColor=[UIColor grayColor];
     lbl_address.text=storeInfo[@"store_address"];
     lbl_address.numberOfLines=2;
@@ -132,10 +132,13 @@
     UIButton * btn_location=[[UIButton alloc] initWithFrame:CGRectMake(0, BackView_StoreInfo.frame.origin.y, fenge.frame.origin.x, BackView_StoreInfo.frame.size.height)];
     [btn_location addTarget:self action:@selector(JumptoNavi:) forControlEvents:UIControlEventTouchUpInside];
     [myheaderView addSubview:btn_location];
-    UIButton * btn_Tel=[[UIButton alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-47, BackView_StoreInfo.frame.origin.y+10, 30, 30)];
+    UIButton * btn_Tel=[[UIButton alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-47, BackView_StoreInfo.frame.origin.y+5, 30, 30)];
     [btn_Tel setImage:[UIImage imageNamed:@"Tel_icon"] forState:UIControlStateNormal];
     [btn_Tel addTarget:self action:@selector(MakeCallForStore) forControlEvents:UIControlEventTouchUpInside];
     [myheaderView addSubview:btn_Tel];
+    UIView * fenge1=[[UIView alloc] initWithFrame:CGRectMake(15, myheaderView.frame.size.height-1, SCREEN_WIDTH-13, 0.3)];
+    fenge1.backgroundColor=[UIColor grayColor];
+    [myheaderView addSubview:fenge1];
     _myTableVeiw.tableHeaderView=myheaderView;
 }
 
@@ -233,8 +236,8 @@
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell * cell=[[UITableViewCell alloc] initWithFrame:CGRectMake(10, 0, SCREEN_WIDTH-20, 60)];
-    UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10, 20, SCREEN_WIDTH/2-10, 20)];
-    UILabel * lbl_num=[[UILabel alloc] initWithFrame:CGRectMake(lbl_title.frame.size.width+lbl_title.frame.origin.x, 20, SCREEN_WIDTH/2-10, 20)];
+    UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(15, 20, SCREEN_WIDTH/2-10, 20)];
+    UILabel * lbl_num=[[UILabel alloc] initWithFrame:CGRectMake(lbl_title.frame.size.width+lbl_title.frame.origin.x, 20, SCREEN_WIDTH/2-20, 20)];
     lbl_num.textAlignment=NSTextAlignmentRight;
     switch (indexPath.row) {
         case 0:
