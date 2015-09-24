@@ -7,7 +7,6 @@
 //
 
 #import "ShopEditDetialViewController.h"
-#import "ZLPhoto.h"
 #import "DataProvider.h"
 #import "AppDelegate.h"
 #import "ShopDetialTableViewCell.h"
@@ -17,13 +16,19 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "CCLocationManager.h"
 
+#import "JKImagePickerController.h"
+#import <AssetsLibrary/AssetsLibrary.h>
+#import "PhotoCell.h"
+
 
 #define ORIGINAL_MAX_WIDTH 640.0f
 
 
-@interface ShopEditDetialViewController ()<ZLPhotoPickerViewControllerDelegate,ZLPhotoPickerBrowserViewControllerDataSource,ZLPhotoPickerBrowserViewControllerDelegate,UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,UIPickerViewDelegate,UIPickerViewDataSource,VPImageCropperDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate, UIActionSheetDelegate >
-@property (nonatomic , strong) NSMutableArray *assets;
-@property (weak,nonatomic) UIScrollView *scrollView;
+@interface ShopEditDetialViewController ()<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,UIPickerViewDelegate,UIPickerViewDataSource,VPImageCropperDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate, UIActionSheetDelegate,JKImagePickerControllerDelegate,UICollectionViewDataSource,UICollectionViewDelegate,UIAlertViewDelegate >
+
+
+@property (nonatomic, retain) UICollectionView *collectionView;
+@property (nonatomic, strong) NSMutableArray   *assetsArray;
 @property(nonatomic,strong)UIPickerView * mypicker;
 @property (nonatomic, strong) UIImageView *portraitImageView;
 
@@ -31,9 +36,11 @@
 
 @implementation ShopEditDetialViewController
 {
+    UIScrollView *scrollView;
     NSMutableDictionary * prm;
     UIButton * btn_avaer;
     UIView * backView_bottom;
+    UIImageView * img_image;
     
     NSArray * firstAreaArray;
     NSArray * secondAreaArray;
@@ -52,12 +59,17 @@
     NSString *images;
     NSString * avatarImg;
     UIImage *img_avatarimg;
+    
+    int sliderIndex;
+    
+    NSMutableArray* sliderImg;//商品已存在的轮播图
+    NSMutableArray *sliderSelectArray;
 }
-- (NSMutableArray *)assets{
-    if (!_assets) {
-        _assets = [[NSMutableArray alloc] init];
+- (NSMutableArray *)assetsArray{
+    if (!_assetsArray) {
+        _assetsArray = [[NSMutableArray alloc] init];
     }
-    return _assets;
+    return _assetsArray;
 }
 
 
@@ -66,6 +78,8 @@
     _lblTitle.text=@"店铺详情";
     _lblTitle.textColor=[UIColor whiteColor];
     prm=[[NSMutableDictionary alloc] initWithDictionary:_StoreInfo];
+    sliderImg=[[NSMutableArray alloc] initWithArray:_StoreInfo[@"store_slide"]];
+    sliderSelectArray=[[NSMutableArray alloc] init];
     [self addRightbuttontitle:@"取消"];
     uplodaimage=0;
     images=@"";
@@ -136,20 +150,49 @@
 {
     // 这个属性不能少
     backView_bottom=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 200)];
-    UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10, 10, 120, 20)];
-    lbl_title.text=@"店铺轮播图片";
-    lbl_title.font=[UIFont systemFontOfSize:15];
+    UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
+    lbl_title.text=@"商品图片";
     [backView_bottom addSubview:lbl_title];
     self.automaticallyAdjustsScrollViewInsets = NO;
-    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    scrollView = [[UIScrollView alloc] init];
     scrollView.showsHorizontalScrollIndicator = NO;
     scrollView.showsVerticalScrollIndicator = NO;
-    scrollView.frame = CGRectMake(10, lbl_title.frame.size.height+lbl_title.frame.origin.y+10, SCREEN_WIDTH-20,150);
+    scrollView.frame = CGRectMake(95, lbl_title.frame.size.height+lbl_title.frame.origin.y+5, SCREEN_WIDTH-9,65);
+    
+    if (sliderImg.count>0) {
+        UIView * lastview=[scrollView.subviews lastObject];
+        for (int i=0; i<sliderImg.count; i++) {
+            lastview=[scrollView.subviews lastObject];
+            UIButton * btn_itembtn=[[UIButton alloc] initWithFrame:CGRectMake(lastview.frame.origin.x+lastview.frame.size.width+5, 0, 65, 65)];
+            btn_itembtn.layer.masksToBounds=YES;
+            btn_itembtn.layer.cornerRadius=5;
+            [btn_itembtn addTarget:self action:@selector(ShowUIAlertViewFordel:) forControlEvents:UIControlEventTouchUpInside];
+            UIImageView * item_img=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 70, 70)];
+            item_img.tag=1;
+            [item_img sd_setImageWithURL:[NSURL URLWithString:sliderImg[i]] placeholderImage:[UIImage imageNamed:@""]];
+            [btn_itembtn addSubview:item_img];
+            //            [btn_itembtn.imageView sd_setImageWithURL:[NSURL URLWithString:sliderImg[i]] placeholderImage:[UIImage imageNamed:@""]];
+            [scrollView addSubview:btn_itembtn];
+        }
+        lastview=[scrollView.subviews lastObject];
+        scrollView.contentSize=CGSizeMake(lastview.frame.size.width+lastview.frame.origin.x+30, 0);
+    }
     [backView_bottom addSubview:scrollView];
     scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.scrollView = scrollView;
-    // 属性scrollView
-    [self reloadScrollView];
+    
+    
+    
+    UIImage  *img = [UIImage imageNamed:@"Add_img_icon"];
+    UIButton   *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(10, lbl_title.frame.size.height+lbl_title.frame.origin.y+5, 65,65);
+    [button setBackgroundImage:img forState:UIControlStateNormal];
+    [button setBackgroundImage:[UIImage imageNamed:@"Add_img_icon"] forState:UIControlStateHighlighted];
+    [button addTarget:self action:@selector(composePicAdd) forControlEvents:UIControlEventTouchUpInside];
+    [backView_bottom addSubview:button];
+    UIView * fenge=[[UIView alloc] initWithFrame:CGRectMake(15, backView_bottom.frame.size.height-1, SCREEN_WIDTH-15, 0.5)];
+    fenge.backgroundColor=[UIColor grayColor];
+    [backView_bottom addSubview:fenge];
+    [backView_bottom addSubview:_collectionView];
     _myTableview.tableHeaderView=backView_bottom;
 }
 
@@ -202,7 +245,7 @@
         cell.txt_filed.hidden=YES;
         btn_avaer=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-70, 10, 60, 60)];
         if (img_avatarimg) {
-            UIImageView * img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
+            img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
             img_image.image=img_avatarimg;
             [btn_avaer addSubview:img_image];
         }
@@ -210,7 +253,7 @@
         {
             if (!([prm[@"store_label"] isKindOfClass:[NSNull class]]||[prm[@"store_label"] isEqualToString:@""])) {
                 
-                UIImageView * img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
+                img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
                 [img_image sd_setImageWithURL:[NSURL URLWithString:prm[@"store_label"]] placeholderImage:[UIImage imageNamed:@"Add_img_icon"]];
                 [btn_avaer addSubview:img_image];
             }
@@ -338,107 +381,6 @@
 {
     [textField resignFirstResponder];
     return YES;
-}
-
-#pragma mark - select Photo Library
-- (void)photoSelecte {
-    // 创建控制器
-    ZLPhotoPickerViewController *pickerVc = [[ZLPhotoPickerViewController alloc] init];
-    pickerVc.minCount = 9 - self.assets.count;
-    pickerVc.status = PickerViewShowStatusCameraRoll;
-    pickerVc.rootvc=self;
-    pickerVc.callBack = ^(NSArray *status){
-        [self.assets addObjectsFromArray:status];
-        [self reloadScrollView];
-    };
-    [self.navigationController pushViewController:pickerVc animated:YES];
-    /**
-     *
-     传值可以用代理，或者用block来接收，以下是block的传值
-     __weak typeof(self) weakSelf = self;
-     pickerVc.callBack = ^(NSArray *assets){
-     weakSelf.assets = assets;
-     [weakSelf.tableView reloadData];
-     };
-     */
-}
-- (void)reloadScrollView{
-    
-    // 先移除，后添加
-    [[self.scrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    
-    NSUInteger column = 4;
-    // 加一是为了有个添加button
-    NSUInteger assetCount = self.assets.count + 1;
-    
-    CGFloat width = (SCREEN_WIDTH-20) / column;
-    for (NSInteger i = 0; i < assetCount; i++) {
-        
-        NSInteger row = i / column;
-        NSInteger col = i % column;
-        
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        btn.imageView.contentMode = UIViewContentModeScaleAspectFill;
-        btn.frame = CGRectMake(width * col, row * width, width, width);
-        
-        // UIButton
-        if (i == self.assets.count){
-            // 最后一个Button
-            [btn setImage:[UIImage imageNamed:@"Add_img_icon"] forState:UIControlStateNormal];
-            [btn addTarget:self action:@selector(photoSelecte) forControlEvents:UIControlEventTouchUpInside];
-        }else{
-            // 如果是本地ZLPhotoAssets就从本地取，否则从网络取
-            if ([[self.assets objectAtIndex:i] isKindOfClass:[ZLPhotoAssets class]]) {
-                [btn setImage:[self.assets[i] thumbImage] forState:UIControlStateNormal];
-                NSLog(@"%@",[self.assets[i] thumbImage]);
-            }else{
-                [btn sd_setImageWithURL:[NSURL URLWithString:self.assets[i % (self.assets.count)]] forState:UIControlStateNormal];
-                NSLog(@"%@",self.assets[i % (self.assets.count)]);
-            }
-            btn.tag = i;
-            [btn addTarget:self action:@selector(tapBrowser:) forControlEvents:UIControlEventTouchUpInside];
-        }
-        
-        [self.scrollView addSubview:btn];
-    }
-    
-    self.scrollView.contentSize = CGSizeMake(SCREEN_WIDTH-20, CGRectGetMaxY([[self.scrollView.subviews lastObject] frame]));
-    backView_bottom.bounds=CGRectMake(0, 0, backView_bottom.frame.size.width, CGRectGetMaxY([[self.scrollView.subviews lastObject] frame])+50);
-    _myTableview.tableHeaderView=backView_bottom;
-}
-- (void)tapBrowser:(UIButton *)btn{
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:btn.tag inSection:0];
-    // 图片游览器
-    ZLPhotoPickerBrowserViewController *pickerBrowser = [[ZLPhotoPickerBrowserViewController alloc] init];
-    // 淡入淡出效果
-    // pickerBrowser.status = UIViewAnimationAnimationStatusFade;
-    //    pickerBrowser.toView = btn;
-    // 数据源/delegate
-    pickerBrowser.delegate = self;
-    pickerBrowser.dataSource = self;
-    // 当前选中的值
-    pickerBrowser.currentIndexPath = [NSIndexPath indexPathForItem:indexPath.row inSection:0];
-    // 展示控制器
-    [self.navigationController pushViewController:pickerBrowser animated:YES];
-}
-#pragma mark - <ZLPhotoPickerBrowserViewControllerDataSource>
-- (NSInteger)numberOfSectionInPhotosInPickerBrowser:(ZLPhotoPickerBrowserViewController *)pickerBrowser{
-    return 1;
-}
-- (NSInteger)photoBrowser:(ZLPhotoPickerBrowserViewController *)photoBrowser numberOfItemsInSection:(NSUInteger)section{
-    return self.assets.count;
-}
-#pragma mark - 每个组展示什么图片,需要包装下ZLPhotoPickerBrowserPhoto
-- (ZLPhotoPickerBrowserPhoto *) photoBrowser:(ZLPhotoPickerBrowserViewController *)pickerBrowser photoAtIndexPath:(NSIndexPath *)indexPath{
-    ZLPhotoAssets *imageObj = [self.assets objectAtIndex:indexPath.row];
-    // 包装下imageObj 成 ZLPhotoPickerBrowserPhoto 传给数据源
-    ZLPhotoPickerBrowserPhoto *photo = [ZLPhotoPickerBrowserPhoto photoAnyImageObjWith:imageObj];
-    
-    UIButton *btn = self.scrollView.subviews[indexPath.row];
-    photo.toView = btn.imageView;
-    // 缩略图
-    photo.thumbImage = btn.imageView.image;
-    return photo;
 }
 
 
@@ -574,7 +516,12 @@
 - (void)imageCropper:(VPImageCropperViewController *)cropperViewController didFinished:(UIImage *)editedImage {
     self.portraitImageView.image = editedImage;
     img_avatarimg=editedImage;
-    [btn_avaer setImage:editedImage forState:UIControlStateNormal];
+    
+    
+    
+    img_image=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, btn_avaer.frame.size.width, btn_avaer.frame.size.height)];
+    img_image.image=editedImage;
+    [btn_avaer addSubview:img_image];
     
     [cropperViewController dismissViewControllerAnimated:YES completion:^{
         // TO DO
@@ -811,24 +758,13 @@
 
 -(void)SaveAllData:(UIButton *)sender
 {
-    [self BuildDataAndRequest];
+    [self BuildSliderData];
 }
 -(void)BuildDataAndRequest
 {
-    NSArray * imgarray=[[NSArray alloc] initWithArray:[self.scrollView subviews]];
-    if ([imgarray[uplodaimage] isKindOfClass:[UIButton class]]) {
-        UIButton * item=(UIButton *)imgarray[uplodaimage];
-        NSData * imgData=UIImageJPEGRepresentation(item.imageView.image, 1.0);
-        DataProvider * dataprovider=[[DataProvider alloc] init];
-        
-        [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
-        [dataprovider UpLoadStoreImg:imgData andkey:_key andname:@"slide"];
-    }
-    else
-    {
-        ++uplodaimage;
-        [self BuildDataAndRequest];
-    }
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
+    [dataprovider UpLoadGoodImg:sliderSelectArray[uplodaimage] andkey:_key andname:@"good_img"];
 }
 
 -(void)UploadeImgBackCall:(id)dict
@@ -837,7 +773,7 @@
     NSLog(@"%@",dict);
     if (!dict[@"datas"][@"error"]) {
         [img_array addObject:dict[@"datas"][@"image_name"]];
-        if (uplodaimage<self.assets.count-1) {
+        if (uplodaimage<sliderSelectArray.count-1) {
             ++uplodaimage;
             [self BuildDataAndRequest];
         }
@@ -854,10 +790,9 @@
                     images=[images stringByAppendingString:[NSString stringWithFormat:@",%@",img_array[i]]];
                 }
             }
-            
             DataProvider *dataprovider=[[DataProvider alloc] init];
             [dataprovider setDelegateObject:self setBackFunctionName:@"UploadAvatarBackCall:"];
-            NSData * imgData=UIImageJPEGRepresentation(btn_avaer.imageView.image, 1.0);
+            NSData * imgData=UIImageJPEGRepresentation(img_image.image, 1.0);
             [dataprovider UpLoadStoreImg:imgData andkey:_key andname:@"avatar"];
             
         }
@@ -895,6 +830,185 @@
         [self.navigationController popViewControllerAnimated:YES];
     }
 }
+
+
+
+
+
+
+
+
+
+#pragma mark 新浪图片多选
+
+
+- (void)composePicAdd
+{
+    JKImagePickerController *imagePickerController = [[JKImagePickerController alloc] init];
+    imagePickerController.delegate = self;
+    imagePickerController.showsCancelButton = YES;
+    imagePickerController.allowsMultipleSelection = YES;
+    imagePickerController.minimumNumberOfSelection = 1;
+    imagePickerController.maximumNumberOfSelection = 9;
+    imagePickerController.selectedAssetArray = self.assetsArray;
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:imagePickerController];
+    [self presentViewController:navigationController animated:YES completion:NULL];
+}
+
+#pragma mark - JKImagePickerControllerDelegate
+- (void)imagePickerController:(JKImagePickerController *)imagePicker didSelectAsset:(JKAssets *)asset isSource:(BOOL)source
+{
+    [imagePicker dismissViewControllerAnimated:YES completion:^{
+        
+    }];
+}
+
+- (void)imagePickerController:(JKImagePickerController *)imagePicker didSelectAssets:(NSArray *)assets isSource:(BOOL)source
+{
+    self.assetsArray = [NSMutableArray arrayWithArray:assets];
+    
+    [imagePicker dismissViewControllerAnimated:YES completion:^{
+        [self.collectionView reloadData];
+    }];
+}
+
+//- (void)imagePickerControllerDidCancel:(JKImagePickerController *)imagePicker
+//{
+//    [imagePicker dismissViewControllerAnimated:YES completion:^{
+//        
+//    }];
+//}
+
+static NSString *kPhotoCellIdentifier = @"kPhotoCellIdentifier";
+
+#pragma mark - UICollectionViewDataSource
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    return [self.assetsArray count];
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    PhotoCell *cell = (PhotoCell *)[collectionView dequeueReusableCellWithReuseIdentifier:kPhotoCellIdentifier forIndexPath:indexPath];
+    cell.tag=indexPath.row;
+    
+    
+    cell.asset = [self.assetsArray objectAtIndex:[indexPath row]];
+    
+    return cell;
+    
+}
+
+#pragma mark - UICollectionViewDelegateFlowLayout
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    return CGSizeMake(80, 80);
+}
+
+#pragma mark - UICollectionViewDelegate
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSLog(@"%ld",(long)[indexPath row]);
+    
+}
+
+- (UICollectionView *)collectionView{
+    if (!_collectionView) {
+        UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+        layout.minimumLineSpacing = 5.0;
+        layout.minimumInteritemSpacing = 5.0;
+        layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+        
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(10, 105, SCREEN_WIDTH-20, 80) collectionViewLayout:layout];
+        _collectionView.backgroundColor = [UIColor clearColor];
+        [_collectionView registerClass:[PhotoCell class] forCellWithReuseIdentifier:kPhotoCellIdentifier];
+        _collectionView.delegate = self;
+        _collectionView.dataSource = self;
+        _collectionView.showsHorizontalScrollIndicator = NO;
+        _collectionView.showsVerticalScrollIndicator = NO;
+        
+        [backView_bottom addSubview:_collectionView];
+        
+    }
+    return _collectionView;
+}
+
+
+
+-(void)ShowUIAlertViewFordel:(UIButton *)sender
+{
+    sliderIndex=(int)sender.tag;
+    UIAlertView * alert1=[[UIAlertView alloc] initWithTitle:@"提示" message:@"确定删除？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"删除", nil];
+    [alert1 show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex==1) {
+        if (sliderImg.count>sliderIndex) {
+            [sliderImg removeObjectAtIndex:sliderIndex];
+            [self buildheaderview];
+        }
+    }
+}
+
+-(void)BuildSliderData
+{
+    [SVProgressHUD showWithStatus:@"正在保存数据" maskType:SVProgressHUDMaskTypeBlack];
+    @try {
+        NSArray * array=[[NSArray alloc] initWithArray:scrollView.subviews];
+        for (int i=0; i<array.count; i++) {
+            if ([array[i] isKindOfClass:[UIButton class]]) {
+                UIButton * btn_item=(UIButton *)array[i];
+                NSArray * itemarray=btn_item.subviews;
+                for (int j=0; j<itemarray.count; j++) {
+                    UIView * itemview=itemarray[j];
+                    if (itemview.tag==1) {
+                        UIImageView * itemImgView=(UIImageView *)itemview;
+                        [sliderSelectArray addObject:UIImageJPEGRepresentation(itemImgView.image, 1.0)];
+                    }
+                }
+            }
+        }
+        NSUserDefaults * userdefaults=[NSUserDefaults standardUserDefaults];
+        for (int i=0; i<_assetsArray.count; i++) {
+//            UIImage * itemimg=[UIImage imageWithCGImage:[[self.assetsArray[i] defaultRepresentation] fullScreenImage]];
+            
+            
+//            if (uplodaimage<_assetsArray.count) {
+//                JKAssets * itemasset=(JKAssets *)_assetsArray[i];
+//                ALAssetsLibrary   *lib = [[ALAssetsLibrary alloc] init];
+//                [lib assetForURL:itemasset.assetPropertyURL resultBlock:^(ALAsset *asset) {
+//                    if (asset) {
+//                        [sliderSelectArray addObject:UIImageJPEGRepresentation([UIImage imageWithCGImage:[[asset defaultRepresentation] fullScreenImage]], 1.0)];
+//                    }
+//                } failureBlock:^(NSError *error) {
+//                    NSLog(@"%@",error);
+//                }];
+                
+//            }
+            [sliderSelectArray addObject:[userdefaults objectForKey:[NSString stringWithFormat:@"%d",i]]];
+            
+        }
+        
+    }
+    @catch (NSException *exception) {
+        NSLog(@"构造轮播图数据出错");
+    }
+    @finally {
+        [self BuildDataAndRequest];
+    }
+    
+    
+    
+    
+}
+
+
+
+
+
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

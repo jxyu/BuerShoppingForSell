@@ -7,23 +7,33 @@
 //
 
 #import "AddGoodsViewController.h"
-#import "ZLPhoto.h"
 #import "AppDelegate.h"
 #import "XCMultiSortTableView.h"
 #import "ClassifyViewController.h"
 #import "DataProvider.h"
 #import "MLTableAlert.h"
+#import "UIImageView+WebCache.h"
+
+#import "JKImagePickerController.h"
+#import <AssetsLibrary/AssetsLibrary.h>
+#import "PhotoCell.h"
+
 //#import "LMContainsLMComboxScrollView.h"
 //#import "LMComBoxView.h"
 
-@interface AddGoodsViewController ()<ZLPhotoPickerViewControllerDelegate,ZLPhotoPickerBrowserViewControllerDataSource,ZLPhotoPickerBrowserViewControllerDelegate,UITableViewDelegate,UITableViewDataSource,XCMultiTableViewDataSource,UITextFieldDelegate,UITextViewDelegate>
-@property (nonatomic , strong) NSMutableArray *assets;
-@property (weak,nonatomic) UIScrollView *scrollView;
+@interface AddGoodsViewController ()<UITableViewDelegate,UITableViewDataSource,XCMultiTableViewDataSource,UITextFieldDelegate,UITextViewDelegate,JKImagePickerControllerDelegate,UICollectionViewDataSource,UICollectionViewDelegate,UIAlertViewDelegate>
+
+@property (nonatomic, retain) UICollectionView *collectionView;
+@property (nonatomic, strong) NSMutableArray   *assetsArray;
+
+
 @property (strong, nonatomic) MLTableAlert *alert;
 @end
 
 @implementation AddGoodsViewController
 {
+    
+    UIScrollView *scrollView;
     NSString * GoodName;
     NSString * GoodDetial;
     NSString * classifyTitle;
@@ -67,12 +77,19 @@
     
     NSArray *array1;//分割字符串后
     NSArray *array2;
+    
+    NSMutableArray * sliderImg;//商品已存在的轮播图
+    NSDictionary * ios_goods_spec_list;
+    int sliderIndex;
+    BOOL sliderUploadFinish;
+    NSMutableArray * sliderSelectArray;
+    NSDictionary * spec_value;
 }
-- (NSMutableArray *)assets{
-    if (!_assets) {
-        _assets = [[NSMutableArray alloc] init];
+- (NSMutableArray *)assetsArray{
+    if (!_assetsArray) {
+        _assetsArray = [[NSMutableArray alloc] init];
     }
-    return _assets;
+    return _assetsArray;
 }
 
 -(void)LoadAllData
@@ -94,10 +111,32 @@
         g_price=dict[@"datas"][@"common_info"][@"goods_price"];
         goods_promotion_price=dict[@"datas"][@"common_info"][@"goods_promotion_price"];
         g_storage=dict[@"datas"][@"common_info"][@"goods_storage"];
-        self.assets=dict[@"datas"][@"common_info"][@"goods_image"];
+        sliderImg =[[NSMutableArray alloc] initWithArray:dict[@"datas"][@"common_info"][@"goods_image"]];
+        ios_goods_spec_list=dict[@"datas"][@"ios_goods_spec_list"];
+        spec_value=dict[@"datas"][@"common_info"][@"spec_value"];
+        if (dict[@"datas"][@"common_info"][@"goods_storage"]) {
+            NSArray * arraySpec=[[NSArray alloc] initWithArray:dict[@"datas"][@"common_info"][@"spec_name"]];
+            if (arraySpec.count==1) {
+                guige1=arraySpec[0][@"spec_id"];
+                guigename1=arraySpec[0][@"spec_name"];
+            }
+            else if (arraySpec.count==2)
+            {
+                guige1=arraySpec[0][@"spec_id"];
+                guigename1=arraySpec[0][@"spec_name"];
+                guige2=arraySpec[1][@"spec_id"];
+                guigename2=arraySpec[1][@"spec_name"];
+            }
+        }
+        type_id=dict[@"datas"][@"type_id"];
+        classifyTitle=[NSString stringWithFormat:@"%@/%@",dict[@"datas"][@"common_info"][@"gc_name_1"],dict[@"datas"][@"common_info"][@"gc_name_2"]];
+        classifyOne=[NSString stringWithFormat:@"%@",dict[@"datas"][@"common_info"][@"gc_id_1"]];
+        classifyTwo=[NSString stringWithFormat:@"%@",dict[@"datas"][@"common_info"][@"gc_id_2"]];
         [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:0] withRowAnimation:UITableViewRowAnimationFade];
-        [self initData];
-        [self reloadScrollView];
+        
+        [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:2] withRowAnimation:UITableViewRowAnimationFade];
+        [self buildheaderview];
+        [self BuildExcelData];
     }
 }
 - (void)viewDidLoad {
@@ -112,6 +151,11 @@
     [self LoadAllData];
     [self initData];
     uplodaimage=0;
+    sliderUploadFinish=NO;
+    sliderImg=[[NSMutableArray alloc] init];
+    spec_value=[[NSDictionary alloc] init];
+    sliderSelectArray=[[NSMutableArray alloc] init];
+    ios_goods_spec_list=[[NSDictionary alloc] init];
     img_array=[[NSMutableArray alloc] init];
     request_spec=[[NSMutableArray alloc] init];
     _myTableview.delegate=self;
@@ -119,7 +163,10 @@
     _myTableview.tag=1;
     spec_list=[[NSArray alloc] init];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(RefreshTable:) name:@"select_classify_finish" object:nil];
-    [self buildheaderview];
+    if (!_commonid) {
+        [self buildheaderview];
+    }
+    
 }
 
 - (void)initData {
@@ -224,6 +271,195 @@
     }
     
 }
+
+
+-(void)BuildExcelData
+{
+    @try {
+        headData = [NSMutableArray arrayWithCapacity:10];
+        [headData addObject:guigename1?guigename1:@"规格1"];
+        [headData addObject:guigename2?guigename2:@"规格2"];
+        [headData addObject:@"价格"];
+        [headData addObject:@"库存"];
+        [headData addObject:@"天天特价价格(选填)"];
+        
+        int rowsNumber=1;
+        if (spec_value.count>0) {
+            if (spec_value.count==1) {
+                NSArray * itemarray=[[NSArray alloc] initWithArray:spec_value[guige1]];
+                NSMutableArray * idarray=[[NSMutableArray alloc] init];
+                NSMutableArray * namearray=[[NSMutableArray alloc] init];
+                for (int i=0; i<itemarray.count; i++) {
+                    [idarray addObject:itemarray[i][@"spec_value_id"]] ;
+                    [namearray addObject:itemarray[i][@"spec_value_name"]];
+                    if (i==0) {
+                        guigetext1=[NSString stringWithFormat:@"%@",itemarray[i][@"spec_value_name"]];
+                    }
+                    else
+                    {
+                        guigetext1=[NSString stringWithFormat:@"%@,%@",guigetext1,itemarray[i][@"spec_value_name"]];
+                    }
+                }
+                GuigeValueid1=[[NSArray alloc] initWithArray:idarray];
+                array1=[[NSArray alloc] initWithArray:namearray];
+                rowsNumber=(int)GuigeValueid1.count;
+            }
+            else
+            {
+                NSArray * itemarray=[[NSArray alloc] initWithArray:spec_value[[NSString stringWithFormat:@"%@",guige1]]];
+                NSMutableArray * idarray=[[NSMutableArray alloc] init];
+                NSMutableArray * namearray=[[NSMutableArray alloc] init];
+                for (int i=0; i<itemarray.count; i++) {
+                    [idarray addObject:itemarray[i][@"spec_value_id"]] ;
+                    [namearray addObject:itemarray[i][@"spec_value_name"]];
+                    if (i==0) {
+                        guigetext1=[NSString stringWithFormat:@"%@",itemarray[i][@"spec_value_name"]];
+                    }
+                    else
+                    {
+                        guigetext1=[NSString stringWithFormat:@"%@,%@",guigetext1,itemarray[i][@"spec_value_name"]];
+                    }
+                }
+                GuigeValueid1=[[NSArray alloc] initWithArray:idarray];
+                array1=[[NSArray alloc] initWithArray:namearray];
+                
+                
+                NSArray * itemarray1=[[NSArray alloc] initWithArray:spec_value[[NSString stringWithFormat:@"%@",guige2]]];
+                NSMutableArray * idarray1=[[NSMutableArray alloc] init];
+                NSMutableArray * namearray1=[[NSMutableArray alloc] init];
+                for (int i=0; i<itemarray1.count; i++) {
+                    [idarray1 addObject:itemarray1[i][@"spec_value_id"]] ;
+                    [namearray1 addObject:itemarray1[i][@"spec_value_name"]];
+                    if (i==0) {
+                        guigetext2=[NSString stringWithFormat:@"%@",itemarray1[i][@"spec_value_name"]];
+                    }
+                    else
+                    {
+                        guigetext2=[NSString stringWithFormat:@"%@,%@",guigetext2,itemarray1[i][@"spec_value_name"]];
+                    }
+                    
+                }
+                GuigeValueid2=[[NSArray alloc] initWithArray:idarray1];
+                array2=[[NSArray alloc] initWithArray:namearray1];
+                rowsNumber=(int)GuigeValueid1.count*(int)GuigeValueid2.count;
+            }
+            [_myTableview reloadSections:[NSIndexSet indexSetWithIndex:1] withRowAnimation:UITableViewRowAnimationFade];
+            
+        }
+        
+        
+        
+        
+        
+//        if (guigetext1.length>0) {
+//            NSRange range=[guigetext1 rangeOfString:@","];
+//            if (range.length>0) {
+//                array1= [guigetext1 componentsSeparatedByString:@","];
+//            }
+//            else
+//            {
+//                array1= [guigetext1 componentsSeparatedByString:@"，"];
+//            }
+//            
+//            if (guigetext2.length>0) {
+//                NSRange range1=[guigetext1 rangeOfString:@","];
+//                if (range1.length>0) {
+//                    array2= [guigetext2 componentsSeparatedByString:@","];
+//                }
+//                else
+//                {
+//                    array2= [guigetext2 componentsSeparatedByString:@"，"];
+//                }
+//                rowsNumber=(int)array1.count*(int)array2.count;
+//            }
+//            else
+//            {
+//                rowsNumber=(int)array1.count;
+//            }
+//        }
+        
+        int indexnum=0;
+        priceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        
+        kucunMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        specpriceMutableArray = [NSMutableArray arrayWithCapacity:rowsNumber];
+        if (GuigeValueid2.count>0) {
+            for (int i=0; i<GuigeValueid1.count; i++) {
+                for (int j=0; j<GuigeValueid2.count; j++) {
+                    [priceMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@|%@",GuigeValueid1[i],GuigeValueid2[j]]][@"price"]] atIndexedSubscript:indexnum];
+                    [kucunMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@|%@",GuigeValueid1[i],GuigeValueid2[j]]][@"storage"]] atIndexedSubscript:indexnum];
+                    [specpriceMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@|%@",GuigeValueid1[i],GuigeValueid2[j]]][@"goods_promotion_price"]] atIndexedSubscript:indexnum];
+                    ++indexnum;
+                }
+                
+            }
+        }
+        else
+        {
+            if (GuigeValueid1.count>0) {
+                for (int i=0; i<GuigeValueid1.count; i++) {
+                    [priceMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@",GuigeValueid1[i]]][@"price"]] atIndexedSubscript:indexnum];
+                    [kucunMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@",GuigeValueid1[i]]][@"storage"]] atIndexedSubscript:indexnum];
+                    [specpriceMutableArray setObject:[NSString stringWithFormat:@"%@",ios_goods_spec_list[[NSString stringWithFormat:@"%@",GuigeValueid1[i]]][@"goods_promotion_price"]] atIndexedSubscript:indexnum];
+                    ++indexnum;
+                }
+            }
+        }
+        
+        leftTableData = [NSMutableArray arrayWithCapacity:10];
+        NSMutableArray *one = [NSMutableArray arrayWithCapacity:10];
+        for (int i = 0; i < rowsNumber; i++) {
+            [one addObject:[NSString stringWithFormat:@"ki-%d", i]];
+        }
+        [leftTableData addObject:one];
+        
+        rightTableData = [NSMutableArray arrayWithCapacity:10];
+        NSMutableArray *oneR = [NSMutableArray arrayWithCapacity:10];
+        for (int i = 0; i < rowsNumber; i++) {
+            NSMutableArray *ary = [NSMutableArray arrayWithCapacity:10];
+            for (int j = 0; j < 5; j++) {
+                if (j == 0) {
+                    [ary addObject:[NSString stringWithFormat:@"%@",array1.count>0?array1[i/(array1.count)]:@"无"]];
+                }else if (j == 1) {
+                    [ary addObject:[NSString stringWithFormat:@"%@",array2.count>0?array2[i%(array2.count)]:@"无"]];
+                }
+                else if (j == 2) {
+                    [ary addObject:priceMutableArray[i]];
+                }
+                else if (j == 3) {
+                    [ary addObject:kucunMutableArray[i]];
+                }
+                else {
+                    [ary addObject:specpriceMutableArray[i]];
+                }
+                
+            }
+            [oneR addObject:ary];
+            if (GuigeValueid1) {
+                if (GuigeValueid2) {
+                    NSDictionary * item=@{GuigeValueid1[i/(array1.count)]:array1[i/(array1.count)],GuigeValueid2[i%(array2.count)]:array2[i%(array2.count)]};
+                    NSDictionary * requsetitem=@{@"sp_value":item,@"zuhe_id":[NSString stringWithFormat:@"i_%@%@",GuigeValueid1[i/(array1.count)],GuigeValueid2[i%(array2.count)]]};
+                    [request_spec addObject:requsetitem];
+                }
+                else
+                {
+                    NSDictionary * item=@{GuigeValueid1[i/(array1.count)]:array1[i/(array1.count)]};
+                    NSDictionary * requsetitem=@{@"sp_value":item,@"zuhe_id":[NSString stringWithFormat:@"i_%@",GuigeValueid1[i/(array1.count)]]};
+                    [request_spec addObject:requsetitem];
+                }
+            }
+        }
+        [rightTableData addObject:oneR];
+    }
+    @catch (NSException *exception) {
+        NSLog(@"建立表格时出错");
+        NSLog(@"%@",exception);
+        [self initData];
+    }
+    @finally {
+        
+    }
+}
 -(void)buildheaderview
 {
     // 这个属性不能少
@@ -232,15 +468,42 @@
     lbl_title.text=@"商品图片";
     [backView_bottom addSubview:lbl_title];
     self.automaticallyAdjustsScrollViewInsets = NO;
-    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    scrollView = [[UIScrollView alloc] init];
     scrollView.showsHorizontalScrollIndicator = NO;
     scrollView.showsVerticalScrollIndicator = NO;
-    scrollView.frame = CGRectMake(10, lbl_title.frame.size.height+lbl_title.frame.origin.y+10, SCREEN_WIDTH-20,150);
+    scrollView.frame = CGRectMake(95, lbl_title.frame.size.height+lbl_title.frame.origin.y+5, SCREEN_WIDTH-9,65);
+    
+    if (sliderImg.count>0) {
+        UIView * lastview=[scrollView.subviews lastObject];
+        for (int i=0; i<sliderImg.count; i++) {
+            lastview=[scrollView.subviews lastObject];
+            UIButton * btn_itembtn=[[UIButton alloc] initWithFrame:CGRectMake(lastview.frame.origin.x+lastview.frame.size.width+5, 0, 65, 65)];
+            btn_itembtn.layer.masksToBounds=YES;
+            btn_itembtn.layer.cornerRadius=5;
+            [btn_itembtn addTarget:self action:@selector(ShowUIAlertViewFordel:) forControlEvents:UIControlEventTouchUpInside];
+            UIImageView * item_img=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 70, 70)];
+            item_img.tag=1;
+            [item_img sd_setImageWithURL:[NSURL URLWithString:sliderImg[i]] placeholderImage:[UIImage imageNamed:@""]];
+            [btn_itembtn addSubview:item_img];
+//            [btn_itembtn.imageView sd_setImageWithURL:[NSURL URLWithString:sliderImg[i]] placeholderImage:[UIImage imageNamed:@""]];
+            [scrollView addSubview:btn_itembtn];
+        }
+        lastview=[scrollView.subviews lastObject];
+        scrollView.contentSize=CGSizeMake(lastview.frame.size.width+lastview.frame.origin.x+30, 0);
+    }
     [backView_bottom addSubview:scrollView];
     scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    self.scrollView = scrollView;
-    // 属性scrollView
-    [self reloadScrollView];
+    
+    
+    
+    UIImage  *img = [UIImage imageNamed:@"Add_img_icon"];
+    UIButton   *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(10, lbl_title.frame.size.height+lbl_title.frame.origin.y+5, 65,65);
+    [button setBackgroundImage:img forState:UIControlStateNormal];
+    [button setBackgroundImage:[UIImage imageNamed:@"Add_img_icon"] forState:UIControlStateHighlighted];
+    [button addTarget:self action:@selector(composePicAdd) forControlEvents:UIControlEventTouchUpInside];
+    [backView_bottom addSubview:button];
+    [backView_bottom addSubview:_collectionView];
     _myTableview.tableHeaderView=backView_bottom;
 }
 
@@ -304,7 +567,7 @@
             UITextView * txtview_detial=[[UITextView alloc] initWithFrame:CGRectMake(x, 15, SCREEN_WIDTH-x-10, 80)];
             txtview_detial.scrollEnabled=YES;
             txtview_detial.backgroundColor=[UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
-            if (GoodDetial) {
+            if (![GoodDetial isKindOfClass:[NSNull class]]) {
                 txtview_detial.text=GoodDetial;
             }
             txtview_detial.delegate=self;
@@ -322,7 +585,7 @@
     if (indexPath.section==2) {
         if (indexPath.row==0) {
             UIButton * btn_guige1=[[UIButton alloc] initWithFrame:CGRectMake(10,10, 60, 30)];
-            [btn_guige1 setTitle:@"规格1" forState:UIControlStateNormal];
+            [btn_guige1 setTitle:guigename1?guigename1:@"规格1" forState:UIControlStateNormal];
             [btn_guige1 addTarget:self action:@selector(btn_selectGuige:) forControlEvents:UIControlEventTouchUpInside];
             [btn_guige1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
             btn_guige1.tag=1;
@@ -343,7 +606,7 @@
         }else
         {
             UIButton * btn_guige1=[[UIButton alloc] initWithFrame:CGRectMake(10,10, 60, 30)];
-            [btn_guige1 setTitle:@"规格2" forState:UIControlStateNormal];
+            [btn_guige1 setTitle:guigename2?guigename2:@"规格2" forState:UIControlStateNormal];
             [btn_guige1 addTarget:self action:@selector(btn_selectGuige:) forControlEvents:UIControlEventTouchUpInside];
             [btn_guige1 setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
             btn_guige1.tag=2;
@@ -403,106 +666,6 @@
     }
 }
 
-#pragma mark - select Photo Library
-- (void)photoSelecte {
-    // 创建控制器
-    ZLPhotoPickerViewController *pickerVc = [[ZLPhotoPickerViewController alloc] init];
-    pickerVc.minCount = 9 - self.assets.count;
-    pickerVc.status = PickerViewShowStatusCameraRoll;
-    pickerVc.rootvc=self;
-    pickerVc.callBack = ^(NSArray *status){
-        [self.assets addObjectsFromArray:status];
-        [self reloadScrollView];
-    };
-    [self.navigationController pushViewController:pickerVc animated:YES];
-    /**
-     *
-     传值可以用代理，或者用block来接收，以下是block的传值
-     __weak typeof(self) weakSelf = self;
-     pickerVc.callBack = ^(NSArray *assets){
-     weakSelf.assets = assets;
-     [weakSelf.tableView reloadData];
-     };
-     */
-}
-- (void)reloadScrollView{
-    
-    // 先移除，后添加
-    [[self.scrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    
-    NSUInteger column = 4;
-    // 加一是为了有个添加button
-    NSUInteger assetCount = self.assets.count + 1;
-    
-    CGFloat width = (SCREEN_WIDTH-20) / column;
-    for (NSInteger i = 0; i < assetCount; i++) {
-        
-        NSInteger row = i / column;
-        NSInteger col = i % column;
-        
-        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
-        btn.imageView.contentMode = UIViewContentModeScaleAspectFill;
-        btn.frame = CGRectMake(width * col, row * width, width, width);
-        
-        // UIButton
-        if (i == self.assets.count){
-            // 最后一个Button
-            [btn setImage:[UIImage imageNamed:@"Add_img_icon"] forState:UIControlStateNormal];
-            [btn addTarget:self action:@selector(photoSelecte) forControlEvents:UIControlEventTouchUpInside];
-        }else{
-            // 如果是本地ZLPhotoAssets就从本地取，否则从网络取
-            if ([[self.assets objectAtIndex:i] isKindOfClass:[ZLPhotoAssets class]]) {
-                [btn setImage:[self.assets[i] thumbImage] forState:UIControlStateNormal];
-                NSLog(@"%@",[self.assets[i] thumbImage]);
-            }else{
-                [btn sd_setImageWithURL:[NSURL URLWithString:self.assets[i % (self.assets.count)]] forState:UIControlStateNormal];
-                NSLog(@"%@",self.assets[i % (self.assets.count)]);
-            }
-            btn.tag = i;
-            [btn addTarget:self action:@selector(tapBrowser:) forControlEvents:UIControlEventTouchUpInside];
-        }
-        
-        [self.scrollView addSubview:btn];
-    }
-    
-    self.scrollView.contentSize = CGSizeMake(SCREEN_WIDTH-20, CGRectGetMaxY([[self.scrollView.subviews lastObject] frame]));
-    backView_bottom.bounds=CGRectMake(0, 0, backView_bottom.frame.size.width, CGRectGetMaxY([[self.scrollView.subviews lastObject] frame])+50);
-    _myTableview.tableHeaderView=backView_bottom;
-}
-- (void)tapBrowser:(UIButton *)btn{
-    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:btn.tag inSection:0];
-    // 图片游览器
-    ZLPhotoPickerBrowserViewController *pickerBrowser = [[ZLPhotoPickerBrowserViewController alloc] init];
-    // 淡入淡出效果
-    // pickerBrowser.status = UIViewAnimationAnimationStatusFade;
-    //    pickerBrowser.toView = btn;
-    // 数据源/delegate
-    pickerBrowser.delegate = self;
-    pickerBrowser.dataSource = self;
-    // 当前选中的值
-    pickerBrowser.currentIndexPath = [NSIndexPath indexPathForItem:indexPath.row inSection:0];
-    // 展示控制器
-    [self.navigationController pushViewController:pickerBrowser animated:YES];
-}
-#pragma mark - <ZLPhotoPickerBrowserViewControllerDataSource>
-- (NSInteger)numberOfSectionInPhotosInPickerBrowser:(ZLPhotoPickerBrowserViewController *)pickerBrowser{
-    return 1;
-}
-- (NSInteger)photoBrowser:(ZLPhotoPickerBrowserViewController *)photoBrowser numberOfItemsInSection:(NSUInteger)section{
-    return self.assets.count;
-}
-#pragma mark - 每个组展示什么图片,需要包装下ZLPhotoPickerBrowserPhoto
-- (ZLPhotoPickerBrowserPhoto *) photoBrowser:(ZLPhotoPickerBrowserViewController *)pickerBrowser photoAtIndexPath:(NSIndexPath *)indexPath{
-    ZLPhotoAssets *imageObj = [self.assets objectAtIndex:indexPath.row];
-    // 包装下imageObj 成 ZLPhotoPickerBrowserPhoto 传给数据源
-    ZLPhotoPickerBrowserPhoto *photo = [ZLPhotoPickerBrowserPhoto photoAnyImageObjWith:imageObj];
-    
-    UIButton *btn = self.scrollView.subviews[indexPath.row];
-    photo.toView = btn.imageView;
-    // 缩略图
-    photo.thumbImage = btn.imageView.image;
-    return photo;
-}
 
 #pragma mark - XCMultiTableViewDataSource
 
@@ -737,24 +900,15 @@
 
 -(void)clickRightButton:(UIButton *)sender
 {
-    [self BuildDataAndRequest];
+    [self BuildSliderData];
 }
 -(void)BuildDataAndRequest
 {
-    NSArray * imgarray=[[NSArray alloc] initWithArray:[self.scrollView subviews]];
-    if ([imgarray[uplodaimage] isKindOfClass:[UIButton class]]) {
-        UIButton * item=(UIButton *)imgarray[uplodaimage];
-        NSData * imgData=UIImageJPEGRepresentation(item.imageView.image, 1.0);
-        DataProvider * dataprovider=[[DataProvider alloc] init];
-        
-        [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
-        [dataprovider UpLoadGoodImg:imgData andkey:userinfoWithFile[@"key"] andname:@"good_img"];
-    }
-    else
-    {
-        ++uplodaimage;
-        [self BuildDataAndRequest];
-    }
+    
+    DataProvider * dataprovider=[[DataProvider alloc] init];
+    [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
+    [dataprovider UpLoadGoodImg:sliderSelectArray[uplodaimage] andkey:userinfoWithFile[@"key"] andname:@"good_img"];
+    
 }
 
 -(void)UploadeImgBackCall:(id)dict
@@ -763,7 +917,7 @@
     NSLog(@"%@",dict);
     if (!dict[@"datas"][@"error"]) {
         [img_array addObject:dict[@"datas"][@"image_name"]];
-        if (uplodaimage<self.assets.count-1) {
+        if (uplodaimage<sliderSelectArray.count-1) {
             ++uplodaimage;
             [self BuildDataAndRequest];
         }
@@ -780,10 +934,16 @@
                     images=[images stringByAppendingString:[NSString stringWithFormat:@",%@",img_array[i]]];
                 }
             }
-            
             DataProvider * dataprovider=[[DataProvider alloc] init];
             [dataprovider setDelegateObject:self setBackFunctionName:@"SaveGoodInfoBackCall:"];
-            [dataprovider SaveGoodInfo:[self GetAllPageData]];
+            if (_isEdit) {
+                [dataprovider SaveEditGoodInfo:[self GetAllPageData]];
+            }
+            else
+            {
+                [dataprovider SaveGoodInfo:[self GetAllPageData]];
+            }
+            
         }
     }
 }
@@ -818,6 +978,14 @@
         [requestPrm setObject:images forKey:@"image_all"];
         [requestPrm setObject:img_array[0] forKey:@"image_path"];
         [requestPrm setObject:[self buileExcleData] forKey:@"spec"];
+        
+        [requestPrm setObject:g_price forKey:@"g_price"];
+        [requestPrm setObject:goods_promotion_price forKey:@"goods_promotion_price"];
+        [requestPrm setObject:g_storage forKey:@"g_storage"];
+        [requestPrm setObject:GoodDetial forKey:@"goods_jingle"];
+        if (_commonid) {
+            [requestPrm setValue:_commonid forKey:@"goods_commonid"];
+        }
         if (guige2) {
             NSMutableDictionary * sp_name=[[NSMutableDictionary alloc] init];
             [sp_name setObject:guigename1 forKeyedSubscript:guige1];
@@ -878,8 +1046,172 @@
     NSLog(@"保存返回:%@",dict);
     if (dict[@"datas"][@"common_id"]) {
         [SVProgressHUD showSuccessWithStatus:@"发布成功" maskType:SVProgressHUDMaskTypeBlack];
+        
     }
 }
+
+#pragma mark 新浪图片多选
+
+
+- (void)composePicAdd
+{
+    JKImagePickerController *imagePickerController = [[JKImagePickerController alloc] init];
+    imagePickerController.delegate = self;
+    imagePickerController.showsCancelButton = YES;
+    imagePickerController.allowsMultipleSelection = YES;
+    imagePickerController.minimumNumberOfSelection = 1;
+    imagePickerController.maximumNumberOfSelection = 9;
+    imagePickerController.selectedAssetArray = self.assetsArray;
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:imagePickerController];
+    [self presentViewController:navigationController animated:YES completion:NULL];
+}
+
+#pragma mark - JKImagePickerControllerDelegate
+- (void)imagePickerController:(JKImagePickerController *)imagePicker didSelectAsset:(JKAssets *)asset isSource:(BOOL)source
+{
+    [imagePicker dismissViewControllerAnimated:YES completion:^{
+        
+    }];
+}
+
+- (void)imagePickerController:(JKImagePickerController *)imagePicker didSelectAssets:(NSArray *)assets isSource:(BOOL)source
+{
+    self.assetsArray = [NSMutableArray arrayWithArray:assets];
+    
+    [imagePicker dismissViewControllerAnimated:YES completion:^{
+        [self.collectionView reloadData];
+    }];
+}
+
+- (void)imagePickerControllerDidCancel:(JKImagePickerController *)imagePicker
+{
+    [imagePicker dismissViewControllerAnimated:YES completion:^{
+        
+    }];
+}
+
+static NSString *kPhotoCellIdentifier = @"kPhotoCellIdentifier";
+
+#pragma mark - UICollectionViewDataSource
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    return [self.assetsArray count];
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    PhotoCell *cell = (PhotoCell *)[collectionView dequeueReusableCellWithReuseIdentifier:kPhotoCellIdentifier forIndexPath:indexPath];
+    
+    cell.asset = [self.assetsArray objectAtIndex:[indexPath row]];
+    
+    return cell;
+    
+}
+
+#pragma mark - UICollectionViewDelegateFlowLayout
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    return CGSizeMake(80, 80);
+}
+
+#pragma mark - UICollectionViewDelegate
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSLog(@"%ld",(long)[indexPath row]);
+    
+}
+
+- (UICollectionView *)collectionView{
+    if (!_collectionView) {
+        UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
+        layout.minimumLineSpacing = 5.0;
+        layout.minimumInteritemSpacing = 5.0;
+        layout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+        
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(10, 105, SCREEN_WIDTH-20, 80) collectionViewLayout:layout];
+        _collectionView.backgroundColor = [UIColor clearColor];
+        [_collectionView registerClass:[PhotoCell class] forCellWithReuseIdentifier:kPhotoCellIdentifier];
+        _collectionView.delegate = self;
+        _collectionView.dataSource = self;
+        _collectionView.showsHorizontalScrollIndicator = NO;
+        _collectionView.showsVerticalScrollIndicator = NO;
+        
+        [backView_bottom addSubview:_collectionView];
+        
+    }
+    return _collectionView;
+}
+
+-(void)ShowUIAlertViewFordel:(UIButton *)sender
+{
+    sliderIndex=(int)sender.tag;
+    UIAlertView * alert1=[[UIAlertView alloc] initWithTitle:@"提示" message:@"确定删除？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"删除", nil];
+    [alert1 show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex==1) {
+        if (sliderImg.count>sliderIndex) {
+            [sliderImg removeObjectAtIndex:sliderIndex];
+            [self buildheaderview];
+        }
+    }
+}
+
+
+-(void)BuildSliderData
+{
+    [SVProgressHUD showWithStatus:@"正在保存数据" maskType:SVProgressHUDMaskTypeBlack];
+    @try {
+        NSArray * array=[[NSArray alloc] initWithArray:scrollView.subviews];
+        for (int i=0; i<array.count; i++) {
+            if ([array[i] isKindOfClass:[UIButton class]]) {
+                UIButton * btn_item=(UIButton *)array[i];
+                NSArray * itemarray=btn_item.subviews;
+                for (int j=0; j<itemarray.count; j++) {
+                    UIView * itemview=itemarray[j];
+                    if (itemview.tag==1) {
+                        UIImageView * itemImgView=(UIImageView *)itemview;
+                        [sliderSelectArray addObject:UIImageJPEGRepresentation(itemImgView.image, 1.0)];
+                    }
+                }
+            }
+        }
+        NSUserDefaults * userdefaults=[NSUserDefaults standardUserDefaults];
+        for (int i=0; i<self.assetsArray.count; i++) {
+//            UIImage * itemimg=[UIImage imageWithCGImage:[[self.assetsArray[i] defaultRepresentation] fullScreenImage]];
+            
+//            if (uplodaimage<self.assetsArray.count) {
+//                JKAssets * itemasset=(JKAssets *)self.assetsArray[i];
+//                ALAssetsLibrary   *lib = [[ALAssetsLibrary alloc] init];
+//                [lib assetForURL:itemasset.assetPropertyURL resultBlock:^(ALAsset *asset) {
+//                    if (asset) {
+//                        [sliderSelectArray addObject:UIImageJPEGRepresentation([UIImage imageWithCGImage:[[asset defaultRepresentation] fullScreenImage]], 1.0)];
+//                    }
+//                } failureBlock:^(NSError *error) {
+//                    
+//                }];
+//                
+//            }
+            [sliderSelectArray addObject:[userdefaults objectForKey:[NSString stringWithFormat:@"%d",i]]];
+        }
+
+    }
+    @catch (NSException *exception) {
+        NSLog(@"构造轮播图数据出错");
+    }
+    @finally {
+        [self BuildDataAndRequest];
+    }
+    
+    
+    
+    
+}
+
+
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

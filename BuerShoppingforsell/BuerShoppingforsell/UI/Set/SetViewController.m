@@ -229,6 +229,8 @@
         if (result) {
             [[NSNotificationCenter defaultCenter] postNotificationName:@"Exit_success" object:nil];
             [self.navigationController popToRootViewControllerAnimated:YES];
+            UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:@"退出成功" delegate:nil cancelButtonTitle:@"好的" otherButtonTitles: nil];
+            [alert show];
             DataProvider * dataprovider=[[DataProvider alloc] init];
             [dataprovider setDelegateObject:self setBackFunctionName:@"exitBackCall:"];
             [dataprovider EixtLogin:userinfoWithFile[@"key"] andmobile:userinfoWithFile[@"mobile"]];

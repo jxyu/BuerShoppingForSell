@@ -130,6 +130,7 @@
 {
     AddGoodsViewController * addgoods=[[AddGoodsViewController alloc] initWithNibName:@"AddGoodsViewController" bundle:[NSBundle mainBundle]];
     addgoods.commonid=goodList[indexPath.section][@"goods_commonid"];
+    addgoods.isEdit=YES;
     [self.navigationController pushViewController:addgoods animated:YES];
     [tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
@@ -149,7 +150,7 @@
     cell.layer.masksToBounds=YES;
     cell.frame=CGRectMake(cell.frame.origin.x, cell.frame.origin.y, tableView.frame.size.width, cell.frame.size.height);
     [cell.img_logo sd_setImageWithURL:[NSURL URLWithString:goodList[indexPath.section][@"goods_image"]] placeholderImage:[UIImage imageNamed:@"placeholder.png"]];
-    cell.lbl_Detial.text=goodList[indexPath.section][@"goods_jingle"];
+    cell.lbl_Detial.text=[goodList[indexPath.section][@"goods_jingle"] isKindOfClass:[NSNull class]]?@"":goodList[indexPath.section][@"goods_jingle"];
     cell.lbl_title.text=goodList[indexPath.section][@"goods_name"];
     cell.lbl_price.text=[NSString stringWithFormat:@"¥%@",goodList[indexPath.section][@"goods_price"]];
     cell.lbl_xiaolaing.text=[NSString stringWithFormat:@"销量%@",goodList[indexPath.section][@"goods_salenum"]];

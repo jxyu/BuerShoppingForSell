@@ -77,8 +77,16 @@
         storeInfo=dict[@"datas"][@"store_info"];
         OrderInfo=dict[@"datas"][@"order_info"];
         [self BuildHeaderView];
+        [_myTableVeiw reloadData];
     }
-    [_myTableVeiw reloadData];
+    else
+    {
+//        UIAlertView * alert=[[UIAlertView alloc] initWithTitle:@"提示" message:dict[@"datas"][@"error"] delegate:nil cancelButtonTitle:@"知道了" otherButtonTitles: nil];
+//        [alert show];
+        LoginViewController * login=[[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:[NSBundle mainBundle]];
+        [self.navigationController pushViewController:login animated:YES];
+    }
+    
 }
 
 -(void)BuildHeaderView

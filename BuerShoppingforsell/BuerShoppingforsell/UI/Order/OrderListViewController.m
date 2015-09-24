@@ -41,7 +41,7 @@
     curpage=1;
     actionIndex=0;
     orderListArray=[[NSArray alloc] init];
-    _OrderStatus=@"0";
+    _OrderStatus=@"20";
     NSString *rootPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,
                                                               NSUserDomainMask, YES) objectAtIndex:0];
     NSString *plistPath = [rootPath stringByAppendingPathComponent:@"UserInfo.plist"];
@@ -160,7 +160,7 @@
         UITableViewCell * cell=[[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 60)];
         
         UILabel * lbl_price=[[UILabel alloc] initWithFrame:CGRectMake(cell.frame.size.width-80, 20, 70, 20)];
-        lbl_price.text=[NSString stringWithFormat:@"¥%@",itemarray[@"order_amount"]];
+        lbl_price.text=[NSString stringWithFormat:@"¥%@",itemarray[@"goods_total_pay_price"]];
         lbl_price.font=[UIFont systemFontOfSize:15];
         [cell addSubview:lbl_price];
         UILabel * lbl_title=[[UILabel alloc] initWithFrame:CGRectMake(lbl_price.frame.origin.x-50, 20, 50, 20)];
@@ -179,7 +179,7 @@
     else
     {
         UITableViewCell * cell=[[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 60)];
-        if ([_OrderStatus isEqualToString:@"0"]) {
+        if ([_OrderStatus isEqualToString:@"20"]) {
             UIButton * btn_pay=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-80, 10, 70, 40)];
             btn_pay.layer.masksToBounds=YES;
             btn_pay.layer.cornerRadius=5;
@@ -203,7 +203,7 @@
             btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
             [cell addSubview:btn_cancelOrder];
         }
-        if ([_OrderStatus isEqualToString:@"20"]) {
+        if ([_OrderStatus isEqualToString:@"30"]) {
             UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-80, 10, 70, 40)];
             btn_cancelOrder.layer.masksToBounds=YES;
             btn_cancelOrder.layer.cornerRadius=5;
@@ -216,7 +216,7 @@
             btn_cancelOrder.titleLabel.font=[UIFont systemFontOfSize:15];
             [cell addSubview:btn_cancelOrder];
         }
-        if ([_OrderStatus isEqualToString:@"30"]) {
+        if ([_OrderStatus isEqualToString:@"40"]) {
             UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-80, 10, 70, 40)];
             btn_cancelOrder.layer.masksToBounds=YES;
             btn_cancelOrder.layer.cornerRadius=5;
@@ -229,7 +229,7 @@
             [btn_cancelOrder addTarget:self action:@selector(delOrder:) forControlEvents:UIControlEventTouchUpInside];
             [cell addSubview:btn_cancelOrder];
         }
-        if ([_OrderStatus isEqualToString:@"40"]) {
+        if ([_OrderStatus isEqualToString:@"0"]) {
             UIButton * btn_cancelOrder=[[UIButton alloc] initWithFrame:CGRectMake(cell.frame.size.width-80, 10, 70, 40)];
             btn_cancelOrder.layer.masksToBounds=YES;
             btn_cancelOrder.layer.cornerRadius=5;
@@ -277,8 +277,13 @@
     NSLog(@"%@",dict);
     if (!dict[@"datas"][@"error"]) {
         orderListArray=dict[@"datas"][@"order_list"];
-        [_myTableview reloadData];
+        
     }
+    else
+    {
+        orderListArray=[[NSArray alloc] init];
+    }
+    [_myTableview reloadData];
     [_myTableview.header endRefreshing];
 }
 
@@ -297,7 +302,7 @@
     NSLog(@"上拉刷新");
     NSMutableArray *itemarray=[[NSMutableArray alloc] initWithArray:orderListArray];
     if (!dict[@"datas"][@"error"]) {
-        NSArray * arrayitem=dict[@"datas"][@"order_group_list"];
+        NSArray * arrayitem=dict[@"datas"][@"order_list"];
         for (id item in arrayitem) {
             [itemarray addObject:item];
         }
@@ -318,16 +323,16 @@
     }
     switch (status) {
         case 0:
-            [self.segmentedControl changeSegmentedControlWithIndex:0];
+            [self.segmentedControl changeSegmentedControlWithIndex:3];
             break;
         case 20:
-            [self.segmentedControl changeSegmentedControlWithIndex:1];
+            [self.segmentedControl changeSegmentedControlWithIndex:0];
             break;
         case 30:
-            [self.segmentedControl changeSegmentedControlWithIndex:2];
+            [self.segmentedControl changeSegmentedControlWithIndex:1];
             break;
         case 40:
-            [self.segmentedControl changeSegmentedControlWithIndex:3];
+            [self.segmentedControl changeSegmentedControlWithIndex:2];
             break;
         default:
             break;
@@ -351,16 +356,16 @@
     NSLog(@"%ld",(long)index);
     switch (index) {
         case 0:
-            _OrderStatus=@"0";
-            break;
-        case 1:
             _OrderStatus=@"20";
             break;
-        case 2:
+        case 1:
             _OrderStatus=@"30";
             break;
-        case 3:
+        case 2:
             _OrderStatus=@"40";
+            break;
+        case 3:
+            _OrderStatus=@"0";
             break;
         default:
             break;
@@ -402,6 +407,10 @@
     NSLog(@"%@",dict);
     if ([[NSString stringWithFormat:@"%@",dict[@"datas"]] isEqualToString:@"1"]) {
         [_myTableview.header beginRefreshing];
+    }
+    else
+    {
+        [SVProgressHUD showErrorWithStatus:dict[@"datas"][@"error"] maskType:SVProgressHUDMaskTypeBlack];
     }
 }
 

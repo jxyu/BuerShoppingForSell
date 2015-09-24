@@ -106,7 +106,7 @@
     if (key&&curpage&&order_state) {
         NSString *url=[NSString stringWithFormat:@"%@index.php?act=seller_order&op=index",Url];
         NSDictionary * prm=@{@"curpage":curpage,@"key":key,@"order_state":order_state};
-        [self GetRequest:url andpram:prm];
+        [self PostRequest:url andpram:prm];
     }
 }
 
@@ -227,6 +227,14 @@
         [self PostRequest:url andpram:prm];
     }
 }
+-(void)SaveEditGoodInfo:(id)prm
+{
+    if (prm) {
+        NSString * url=[NSString stringWithFormat:@"%@index.php?act=seller_goods&op=edit_save_goods",Url];
+        [self PostRequest:url andpram:prm];
+    }
+}
+
 
 
 

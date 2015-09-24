@@ -184,7 +184,7 @@
  */
 -(void)SaveGoodInfo:(id)prm;
 
-
+-(void)SaveEditGoodInfo:(id)prm;
 
 
 

@@ -176,7 +176,7 @@
         lbl_cellTitle.text=@"订单编号";
         lbl_cellTitle.textColor=[UIColor grayColor];
         [cell addSubview:lbl_cellTitle];
-        CGFloat x=lbl_cellTitle.frame.size.width+lbl_cellTitle.frame.origin.x+10;
+        CGFloat x=lbl_cellTitle.frame.size.width+lbl_cellTitle.frame.origin.x-20;
         UILabel * lbl_sendWay=[[UILabel alloc] initWithFrame:CGRectMake(x, 20, SCREEN_WIDTH-x-10, 20)];
         lbl_sendWay.textColor=[UIColor grayColor];
         lbl_sendWay.text=order_info[@"order_sn"];
