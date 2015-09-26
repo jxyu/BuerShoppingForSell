@@ -764,7 +764,7 @@
 {
     DataProvider * dataprovider=[[DataProvider alloc] init];
     [dataprovider setDelegateObject:self setBackFunctionName:@"UploadeImgBackCall:"];
-    [dataprovider UpLoadGoodImg:sliderSelectArray[uplodaimage] andkey:_key andname:@"good_img"];
+    [dataprovider UpLoadStoreImg:sliderSelectArray[uplodaimage] andkey:_key andname:@"good_img"];
 }
 
 -(void)UploadeImgBackCall:(id)dict
@@ -796,6 +796,10 @@
             [dataprovider UpLoadStoreImg:imgData andkey:_key andname:@"avatar"];
             
         }
+    }
+    else
+    {
+        [self BuildDataAndRequest];
     }
 }
 -(void)UploadAvatarBackCall:(id)dict

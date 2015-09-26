@@ -982,7 +982,6 @@
         [requestPrm setObject:g_price forKey:@"g_price"];
         [requestPrm setObject:goods_promotion_price forKey:@"goods_promotion_price"];
         [requestPrm setObject:g_storage forKey:@"g_storage"];
-        [requestPrm setObject:GoodDetial forKey:@"goods_jingle"];
         if (_commonid) {
             [requestPrm setValue:_commonid forKey:@"goods_commonid"];
         }
@@ -1006,15 +1005,22 @@
 {
     
     NSMutableDictionary * sp_value=[[NSMutableDictionary alloc] init];
-    for (int i=0; i<array1.count; i++) {
-        NSDictionary * itemdict=@{GuigeValueid1[i]:array1[i]};
-        [sp_value setObject:itemdict forKeyedSubscript:guige1];
-    }
-    if (guige2) {
-        for (int i=0; i<array2.count; i++) {
-            NSDictionary * itemdict=@{GuigeValueid2[i]:array2[i]};
-            [sp_value setObject:itemdict forKeyedSubscript:guige2];
+    
+    if (array1.count>0) {
+        NSMutableDictionary * itemdict1=[[NSMutableDictionary alloc] init];
+        for (int i=0; i<array1.count; i++) {
+            [itemdict1 setObject:array1[i] forKey:GuigeValueid1[i]];
         }
+        [sp_value setObject:itemdict1 forKeyedSubscript:guige1];
+    }
+    
+    
+    if (array2.count>0) {
+        NSMutableDictionary * itemdict2=[[NSMutableDictionary alloc] init];
+        for (int i=0; i<array2.count; i++) {
+            [itemdict2 setObject:array2[i] forKey:GuigeValueid2[i]];
+        }
+        [sp_value setObject:itemdict2 forKeyedSubscript:guige2];
     }
     return sp_value;
 }
@@ -1044,7 +1050,7 @@
 -(void)SaveGoodInfoBackCall:(id)dict
 {
     NSLog(@"保存返回:%@",dict);
-    if (dict[@"datas"][@"common_id"]) {
+    if (!dict[@"datas"][@"error"]) {
         [SVProgressHUD showSuccessWithStatus:@"发布成功" maskType:SVProgressHUDMaskTypeBlack];
         
     }
